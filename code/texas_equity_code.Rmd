@@ -1,0 +1,322 @@
+---
+title: "Texas Equity Metrics"
+author: "Dashiell Young-Saver, Jared Knowles"
+date: "Jun 30, 2018"
+output: 
+  html_document:
+    theme: simplex
+    css: ../docs/styles.css
+    highlight: NULL
+    keep_md: true
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: false
+---
+
+# Creating Equity Metrics
+*Using Texas state testing data files*
+*Programmed in R*
+
+## Getting Started
+```{r knitrSetup, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, comment=NA}
+# Set options for knitr
+library(knitr)
+knitr::opts_chunk$set(comment=NA, warning=FALSE, echo=TRUE,
+                      root.dir = normalizePath("../"),
+                      error=FALSE, message=FALSE, fig.align='center',
+                      fig.width=8, fig.height=6, dpi = 144, 
+                      fig.path = "../figure/E_", 
+                      cache.path = "../cache/E_")
+options(width=80)
+```
+
+
+<div class="navbar navbar-default navbar-fixed-top" id="logo">
+<div class="container">
+<img src="../img/open_sdp_logo_red.png" style="display: block; margin: 0 auto; height: 115px;">
+</div>
+</div>
+
+### Objective
+
+In this guide, you will be able to use standard statistics and data visuals to investigate equity in student testing outcomes along lines of race, income, gender, learning differences, English proficiency, and migrancy status.
+
+### Using this Guide
+
+This guide utilizes mock data from Texas's standardized exams (STAAR test, grades 3-8). Therefore, Texas districts can use this code to directly analyze the testing data files they have received from the Texas Education Agency. However, the code can be adapted to any other state or district context in which student testing outcomes are analyzed. 
+
+Once you have identified analyses that you want to try to replicate or modify, click the 
+"Download" buttons to download R code and sample data. You can make changes to the 
+charts using the code and sample data, or modify the code to work with your own data. If 
+you are familiar with Github, you can click "Go to Repository" and clone the entire repository to your own computer. 
+
+Go to the Participate page to read about more ways to engage with the OpenSDP community or reach out for assistance in adapting this code for your specific context.
+
+### About the Data
+
+The data used in this guide was synthetically generated, and it was formatted to match the Texas Education Agency's state test file formats (Texas's file formats can be found here: https://tea.texas.gov/student.assessment/datafileformats). The data has one record per student. Out of the hundreds of features reported for each student by the Texas Education Agency, we used (and retained) the following features in our analysis: student grade level (3-8), school code, student ID, gender, race-ethnicity, economic disadvantage level, Limited English Proficiency level, and scale scores in reading, math, and writing (for the STAAR state test). We also used indicators of whether or not the student attended a Title 1 school, was a migrant, and was enrolled in special education. Here is a key of the features and their variable names in our simulated dataset:
+
+The Texas Education Agency data files have hundreds of features attached to each student record. Coding our analyses with all of these features could get unwieldy, so the best practice is to select the key features we will need for our analyses. If you would like to directly use your own data with the code from this guide, it is best to delete unecessary features and change the headers to the feature names we chose. Below is a legend to the features we chose and how we named them. A more detailed data definition guide can be found in the `man` folder on the Github repository:
+
+| Feature name    | Feature Description                                 |
+|:-----------     |:------------------                                  |
+| `grade_level`   | Grade level of exam student took (3-8)              |
+| `school_code`   | School ID number                                    |
+| `sid`           | Student ID number                                   |
+| `male`          | Student gender                                      |
+| `race_ethnicity`| Student race/ethnicity                              |
+| `eco_dis`       | Student level of economic disadvantage              |
+| `title_1`       | Indicator if student attends Title 1 school         |
+| `migrant`       | Indicator if student is a migrant                   |
+| `lep`           | Level of Limited English Proficiency                |
+| `iep`           | Indicator if student enrolled in special education  |
+| `rdg_ss`        | Scale score for reading exam                        |
+| `math_ss`       | Scale score for math exam                           |
+| `wrtg_ss`       | Scale score for writing exam                        |  
+| `composition`   | Score on writing composition exam                   |
+
+#### Loading the OpenSDP Dataset and R Packages
+
+This guide takes advantage of the OpenSDP synthetic dataset and several key R packages. The first chunk of code below loads the R packages (make sure to install first!), and the second chunk loads the dataset.
+
+```{r packages, eacho=FALSE}
+library(tidyverse) # main suite of R packages to ease data analysis
+library(magrittr) # allows for some easier pipelines of data
+library(tidyr) #
+library(plyr)
+library(dplyr)
+library(FSA)
+library(ggplot2) # to plot
+library(scales) # to format
+library(grid)
+library(gridExtra) # to plot
+# Read in some R functions that are convenience wrappers
+source("../R/functions.R")
+#pkgTest("devtools")
+#pkgTest("OpenSDPsynthR")
+```
+
+```{r loaddataset, eacho=FALSE}
+# // Step 1: Read in csv file of our dataset, naming it "texas.data"
+texas.data <- read.csv("../data/synth_texas.csv")  
+
+# // Step 2: Attaches data file, enabling calling of feature names directly
+#attach(texas.data)
+```
+
+
+```{r, cache=TRUE, message=FALSE, echo=FALSE}
+# Set the cache to true when using knitr to speed up future analyses
+#simouts <- simpop(nstu = 40000, seed = 8763434, 
+#                  control = sim_control(nschls = 12L, minyear=1996,
+#                                        n_postsec = 50L,
+#                                        n_cohorts = 3,
+#                                        maxyear=2017)) 
+#cgdata <- sdp_cleaner(simouts)
+```
+
+
+### About the Analyses
+
+Especially in larger districts, students may have systematically differing educational outcomes in relation to their various identity markers (race, class, gender, English Language Learner status, etc.). These gaps often present themselves in standardized testing data, at the national, state, and local levels. The following analyses will assist your organization in seeing where gaps may exist and how wide they are, in order to spur and focus the conversation around why the gaps exist and what to do about them.
+
+### Sample Restrictions
+
+One of the most important decisions in running each analysis is defining the sample. 
+
+```{r setSampleRestrictions}
+# Read in global variables for sample restriction
+# Agency name
+#agency_name <- "Agency"
+
+```
+
+### Giving Feedback on this Guide
+ 
+This guide is an open-source document hosted on Github and generated using R Markdown. We welcome feedback, corrections, additions, and updates. Please visit the OpenSDP equity metrics repository to read our contributor guidelines.
+
+## Analyses
+
+### Descriptive Statistics
+
+**Purpose:** Descriptive statistics give your agency a quick snapshot of current achievement gaps among students, identifying areas for further investigation and analysis.
+
+**Required Analysis File Variables:**
+
+- `grade_level` 
+- `school_code` 
+- `male`        
+- `race_ethnicity` 
+- `eco_dis`      
+- `title_1`     
+- `migrant`     
+- `lep`
+- `iep`
+- `rdg_ss`
+- `math_ss`
+- `wrtg_ss`
+- `composition`
+
+**Ask Yourself**
+
+- How do different study subpopulations in your organization perform on standardized tests? How do they compare?
+- Why do these differences occur?
+- What differences do you want to explore further?
+
+**Analytic Technique:** Calculate the summary statistics for exam performance, for all 5th and 8th grade exam takers.
+```{r Averages, echo=TRUE}
+# // Step 1: Set which tested grade levels to analyze (5th and 8th here)
+grades <- c("5","8")
+
+# // Step 2: Set which tested subjects to analyze (math and reading here)
+subjects <- c("rdg_ss","math_ss")
+
+# // Step 3: Calculate summary stats for each grade level
+# Loop over grade level
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  print(paste("grade level: ",grade))
+  print(summary(data[,subjects])) #Print summary stats for grade
+  
+} #End loop over grade level
+
+```
+
+**Analytic Technique:** Now that we have some measures for the performance on exams among all of our students, we can create those same measures for our various subpopulations of students. We will start by comparing descriptive statistics among different student demographic populations (income, race, and gender).
+
+```{r DescriptiveDemographics, echo=TRUE}
+# // Comparison 1: Summary stats for Eco Dis students
+#Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  #Loop over tested subject
+  for(subject in subjects){ 
+    print(paste("grade: ",grade,", subject: ",subject,sep="")) #Print subject and grade level
+    print(Summarize(data[,subject] ~ data$eco_dis)) #Prints comparison table
+    
+  } #End loop over tested subject
+  
+} #End loop over grade level
+
+# // Comparison 2: Summary stats by race-ethnicity
+# Reading and math comparison between groups
+#Loop over grade level
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  #Loop over tested subject
+  for(subject in subjects){ 
+    print(paste(grade,subject,sep=",")) #Print subject and grade level
+    print(Summarize(data[,subject] ~ data$race_ethnicity)) #Prints comparison table
+    
+  } #End loop over tested subject
+  
+} #End loop over grade level
+
+# // Comparison 3: Summary stats by gender
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  #Loop over tested subject
+  for(subject in subjects){ 
+    print(paste("grade: ",grade,", subject: ",subject,sep="")) #Print subject and grade level
+    print(Summarize(data[,subject] ~ data$male)) #Prints comparison table
+    
+  } #End loop over tested subject
+  
+} #End loop over grade level
+```
+
+**Analytic Technique:** In addition to these raw numbers, it will help to visualize these comparisons, to give us a sense of scale and shape in these gaps. To do so, we will use both box plots and histograms.
+
+```{r VisualizeDemographics, echo=TRUE}
+# // Comparison 1: Box plots of scores for eco_dis students
+#Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  #Loop over tested subject
+  for(subject in subjects){ 
+    #Set variables and parameters for our boxplot
+    p <- ggplot(data, aes(x=as.factor(eco_dis), y=data[,subject])) + 
+          geom_boxplot() +
+          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Eco_Dis Level")) +
+          scale_y_continuous(name=paste(subject, " score")) +
+          scale_x_discrete(name="Eco Dis Level", limits=c("0","1"))
+    print(p) 
+    
+  } #End loop over tested subject
+} #End loop over grade level
+
+# // Comparison 2: Histograms of scores for eco_dis students
+#Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  #Loop over tested subject
+  for(subject in subjects){ 
+    #Set variables and parameters for our boxplot
+    p <- ggplot(data, aes(x=data[,subject], fill = as.factor(eco_dis))) + 
+          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Eco_Dis Level"))+
+          geom_histogram(alpha = 0.5, binwidth = 50) + 
+          scale_fill_manual(name="Eco_Dis Level",values=c("red","dodgerblue3"),labels=c("0","1"))+
+          scale_x_continuous(name=paste(subject, " Scale Score", ", Grade", grade)) 
+    print(p) 
+    
+  } #End loop over tested subject
+} #End loop over grade level
+
+# // Comparison 3: Box plots of scores by race-ethnicity
+#Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  #Loop over tested subject
+  for(subject in subjects){ 
+    #Set variables and parameters for our boxplot
+    p <- ggplot(data, aes(x=as.factor(race_ethnicity), y=data[,subject])) + 
+          geom_boxplot() +
+          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Race_Ethnicity")) +
+          scale_y_continuous(name=paste(subject, " score")) +
+          theme(axis.text.x = element_text(angle = 70))
+          scale_x_discrete(name="Eco Dis Level")
+    print(p) 
+    
+  } #End loop over tested subject
+} #End loop over grade level
+
+# // Comparison 4: Histograms of scores by race-ethnicity
+#Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  #Loop over tested subject
+  for(subject in subjects){ 
+    #Set variables and parameters for our boxplot
+    p <- ggplot(data, aes(x=data[,subject], fill = as.factor(race_ethnicity))) + 
+          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Race_Ethnicity"))+
+          geom_histogram(alpha = 0.5, binwidth = 30) + 
+          scale_fill_manual(name="Eco_Dis Level",
+                            values=c("red","dodgerblue3","green","coral",
+                                     "violet","burlywood2","grey68"),
+                            labels=c("AI","A","B","T","H","P","W"))+
+          scale_x_continuous(name=paste(subject, " Scale Score", ", Grade", grade)) 
+    print(p) 
+    
+  } #End loop over tested subject
+} #End loop over grade level
+```
+
+**Analytic Technique:** Next we will extend these comparisons to different student status populations, in relatoin to special education, migrancy status, and LEP status. 
+
+**Possible Next Steps or Action Plans:** Do this for more and/or different grade levels.
