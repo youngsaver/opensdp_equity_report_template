@@ -187,6 +187,52 @@ for(grade in grades){
  Max.   :1289.5   Max.   : 4821.9  
 ```
 
+**Analytic Technique:** In order to give us a further sense of the distributions behind these summary statistics, we will create some visualizations of the data. Specifically, here we use box plots and histograms
+
+
+```r
+# // Visualization 1: Box plots
+#Loop over tested subjects
+for(subject in subjects){
+  
+  data = texas.data[texas.data$grade_level == grades,] #Isolates 5th and 8th graders
+  
+    #Set variables and parameters for our boxplot
+    p <- ggplot(data, aes(x=as.factor(grade_level), y=data[,subject])) + 
+          geom_boxplot() +
+          ggtitle(paste("Subject: ",subject, ", Scores by Grade Level")) +
+          scale_y_continuous(name=paste(subject, " score")) +
+          scale_x_discrete(name="Grade Level")
+    print(p) 
+    
+
+} #End loop over tested subjects
+```
+
+<img src="../figure/E_VisualizeTotals-1.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeTotals-2.png" style="display: block; margin: auto;" />
+
+```r
+# // Comparison 2: Histograms of scores for eco_dis students
+#Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  #Loop over tested subject
+  for(subject in subjects){ 
+    #Set variables and parameters for our boxplot
+    p <- ggplot(data, aes(x=data[,subject])) + 
+          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores (ALL)"))+
+          geom_histogram(alpha = 0.5, binwidth = 50, fill = "dodgerblue", color = "dodgerblue") + 
+          scale_x_continuous(name=paste(subject, " Scale Score", ", Grade", grade)) 
+    print(p) 
+    
+  } #End loop over tested subject
+} #End loop over grade level
+```
+
+<img src="../figure/E_VisualizeTotals-3.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeTotals-4.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeTotals-5.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeTotals-6.png" style="display: block; margin: auto;" />
+
 **Analytic Technique:** Now that we have some measures for the performance on exams among all of our students, we can create those same measures for our various subpopulations of students. We will start by comparing descriptive statistics among different student demographic populations (income, race, and gender).
 
 
@@ -374,7 +420,7 @@ for(grade in grades){
 } #End loop over grade level
 ```
 
-<img src="../figure/E_VisualizeDemographics-1.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeDemographics-2.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeDemographics-3.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeDemographics-4.png" style="display: block; margin: auto;" />
+<img src="../figure/E_VisualizeEcoDis-1.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-2.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-3.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-4.png" style="display: block; margin: auto;" />
 
 ```r
 # // Comparison 2: Histograms of scores for eco_dis students
@@ -397,7 +443,8 @@ for(grade in grades){
 } #End loop over grade level
 ```
 
-<img src="../figure/E_VisualizeDemographics-5.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeDemographics-6.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeDemographics-7.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeDemographics-8.png" style="display: block; margin: auto;" />
+<img src="../figure/E_VisualizeEcoDis-5.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-6.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-7.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-8.png" style="display: block; margin: auto;" />
+
 
 ```r
 # // Comparison 3: Box plots of scores by race-ethnicity
@@ -421,7 +468,7 @@ for(grade in grades){
 } #End loop over grade level
 ```
 
-<img src="../figure/E_VisualizeDemographics-9.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeDemographics-10.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeDemographics-11.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeDemographics-12.png" style="display: block; margin: auto;" />
+<img src="../figure/E_VisualizeRaceEthn-1.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeRaceEthn-2.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeRaceEthn-3.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeRaceEthn-4.png" style="display: block; margin: auto;" />
 
 ```r
 # // Comparison 4: Histograms of scores by race-ethnicity
@@ -436,7 +483,7 @@ for(grade in grades){
     p <- ggplot(data, aes(x=data[,subject], fill = as.factor(race_ethnicity))) + 
           ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Race_Ethnicity"))+
           geom_histogram(alpha = 0.5, binwidth = 30) + 
-          scale_fill_manual(name="Eco_Dis Level",
+          scale_fill_manual(name="Race_Ethn",
                             values=c("red","dodgerblue3","green","coral",
                                      "violet","burlywood2","grey68"),
                             labels=c("AI","A","B","T","H","P","W"))+
@@ -447,7 +494,56 @@ for(grade in grades){
 } #End loop over grade level
 ```
 
-<img src="../figure/E_VisualizeDemographics-13.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeDemographics-14.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeDemographics-15.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeDemographics-16.png" style="display: block; margin: auto;" />
+<img src="../figure/E_VisualizeRaceEthn-5.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeRaceEthn-6.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeRaceEthn-7.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeRaceEthn-8.png" style="display: block; margin: auto;" />
+
+
+```r
+# // Comparison 5: Box plots of scores by gender
+#Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  #Loop over tested subject
+  for(subject in subjects){ 
+    #Set variables and parameters for our boxplot
+    p <- ggplot(data, aes(x=as.factor(male), y=data[,subject])) + 
+          geom_boxplot() +
+          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Gender")) +
+          scale_y_continuous(name=paste(subject, " score")) +
+          scale_x_discrete(name="Gender", labels=c("female","male"))
+    print(p) 
+    
+  } #End loop over tested subject
+} #End loop over grade level
+```
+
+<img src="../figure/E_VisualizeGender-1.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeGender-2.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeGender-3.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeGender-4.png" style="display: block; margin: auto;" />
+
+```r
+# // Comparison 6: Histograms of scores by gender
+#Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  #Loop over tested subject
+  for(subject in subjects){ 
+    #Set variables and parameters for our boxplot
+    p <- ggplot(data, aes(x=data[,subject], fill = as.factor(male))) + 
+          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Gender"))+
+          geom_histogram(alpha = 0.5, binwidth = 30) + 
+          scale_fill_manual(name="Eco_Dis Level",
+                            values=c("cyan","dodgerblue3"),
+                            labels=c("female","male"))+
+          scale_x_continuous(name=paste(subject, " Scale Score", ", Grade", grade)) 
+    print(p) 
+    
+  } #End loop over tested subject
+} #End loop over grade level
+```
+
+<img src="../figure/E_VisualizeGender-5.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeGender-6.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeGender-7.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeGender-8.png" style="display: block; margin: auto;" />
 
 **Analytic Technique:** Next we will extend these comparisons to different student status populations, in relatoin to special education, migrancy status, and LEP status. 
 
