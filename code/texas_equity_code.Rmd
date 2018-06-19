@@ -78,7 +78,7 @@ The Texas Education Agency data files have hundreds of features attached to each
 
 #### Loading the OpenSDP Dataset and R Packages
 
-This guide takes advantage of the OpenSDP synthetic dataset and several key R packages. The first chunk of code below loads the R packages (make sure to install first!), and the second chunk loads the dataset.
+This guide takes advantage of the OpenSDP synthetic dataset and several key R packages. The first chunk of code below loads the R packages (make sure to install first!), and the second chunk loads the dataset and provides us with variable labels.
 
 ```{r packages, eacho=FALSE}
 library(tidyverse) # main suite of R packages to ease data analysis
@@ -101,8 +101,23 @@ source("../R/functions.R")
 # // Step 1: Read in csv file of our dataset, naming it "texas.data"
 texas.data <- read.csv("../data/synth_texas.csv")  
 
-# // Step 2: Attaches data file, enabling calling of feature names directly
-#attach(texas.data)
+# // Step 2: View data file
+View(texas.data)
+
+# // Step 3: Create a vector of labels for feature names in our dataset 
+#These labels will appear in visualizations and tables
+labels <- c("Grade","School ID","Student ID","Gender", "Race-Ethnicity",
+            "Econ Disadvantage Status","Title 1 Status","Migrancy Status",
+            "LEP Status","Spec Ed Enrolled","Reading Score",
+            "Math Score","Writing Score","Writing Comp Score")
+
+
+#Pairs labels with feature names from file
+names(labels) <- c("grade_level","school_code","sid","male","race_ethnicity",
+                   "eco_dis","title_1","migrant",
+                   "lep","iep","rdg_ss",
+                   "math_ss","wrtg_ss","composition")
+
 ```
 
 
@@ -164,7 +179,7 @@ This guide is an open-source document hosted on Github and generated using R Mar
 - Why do these differences occur?
 - What differences do you want to explore further?
 
-**Analytic Technique:** Calculate the summary statistics for exam performance, for all 5th and 8th grade exam takers.
+**Analytic Technique:** Calculate the summary statistics for exam performance, for all 5th and 8th grade exam takers. Note: Once you set which tests and which grade levels you would like to analyze here, the code (as written) will analyze those grade levels and tests for the rest of the guide.
 ```{r Averages, echo=TRUE}
 # // Step 1: Set which tested grade levels to analyze (5th and 8th here)
 grades <- c("5","8")
@@ -178,7 +193,9 @@ for(grade in grades){
   
   data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
   print(paste("grade level: ",grade))
-  print(summary(data[,subjects])) #Print summary stats for grade
+  a <- summary(data[,subjects]) #Summary stats table for grade
+  colnames(a) <- labels[subjects]  #Label table
+  print(a) #Print summary table
   
 } #End loop over grade level
 
@@ -196,8 +213,8 @@ for(subject in subjects){
     #Set variables and parameters for our boxplot
     p <- ggplot(data, aes(x=as.factor(grade_level), y=data[,subject])) + 
           geom_boxplot() +
-          ggtitle(paste("Subject: ",subject, ", Scores by Grade Level")) +
-          scale_y_continuous(name=paste(subject, " score")) +
+          ggtitle(paste(labels[subject], ", by Grade Level")) +
+          scale_y_continuous(name=labels[subject]) +
           scale_x_discrete(name="Grade Level")
     print(p) 
     
@@ -214,9 +231,9 @@ for(grade in grades){
   for(subject in subjects){ 
     #Set variables and parameters for our boxplot
     p <- ggplot(data, aes(x=data[,subject])) + 
-          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores (ALL)"))+
+          ggtitle(paste("Grade: ",grade,", ",labels[subject], " (all students)"))+
           geom_histogram(alpha = 0.5, binwidth = 50, fill = "dodgerblue", color = "dodgerblue") + 
-          scale_x_continuous(name=paste(subject, " Scale Score", ", Grade", grade)) 
+          scale_x_continuous(name=paste(labels[subject])) 
     print(p) 
     
   } #End loop over tested subject
@@ -226,179 +243,78 @@ for(grade in grades){
 **Analytic Technique:** Now that we have some measures for the performance on exams among all of our students, we can create those same measures for our various subpopulations of students. We will start by comparing descriptive statistics among different student demographic populations (income, race, and gender).
 
 ```{r DescriptiveDemographics, echo=TRUE}
-# // Comparison 1: Summary stats for Eco Dis students
+# // Step 1: Initialize Demographics to Analyze
+#Vector with features we want to analyze: Econ Disadvantage, Race Ethnicity, Gender
+dems <- c("eco_dis","race_ethnicity","male")
+
+# // Comparisons: Generating summary stats for Eco Dis, Race Ethnicity, and Gender
 #Loop over grade levels
 for(grade in grades){
   
   data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
   
   #Loop over tested subject
-  for(subject in subjects){ 
-    print(paste("grade: ",grade,", subject: ",subject,sep="")) #Print subject and grade level
-    print(Summarize(data[,subject] ~ data$eco_dis)) #Prints comparison table
+  for(subject in subjects){
+    
+    print(paste("Grade: ",grade,", ",labels[subject])) #Print subject and grade level
+    
+    #Loop over demographic features
+    for(dem in dems){
+      
+      a<-Summarize(data[,subject] ~ data[,dem]) #Makes comparison table
+      colnames(a)[1] <- labels[dem] #Labels comparison table
+      print(a) #Prints comparison table
+      
+    } #End loop over demogrpahic features
     
   } #End loop over tested subject
   
 } #End loop over grade level
 
-# // Comparison 2: Summary stats by race-ethnicity
-# Reading and math comparison between groups
-#Loop over grade level
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){ 
-    print(paste(grade,subject,sep=",")) #Print subject and grade level
-    print(Summarize(data[,subject] ~ data$race_ethnicity)) #Prints comparison table
-    
-  } #End loop over tested subject
-  
-} #End loop over grade level
-
-# // Comparison 3: Summary stats by gender
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){ 
-    print(paste("grade: ",grade,", subject: ",subject,sep="")) #Print subject and grade level
-    print(Summarize(data[,subject] ~ data$male)) #Prints comparison table
-    
-  } #End loop over tested subject
-  
-} #End loop over grade level
 ```
 
 **Analytic Technique:** In addition to these raw numbers, it will help to visualize these comparisons, to give us a sense of scale and shape in these gaps. To do so, we will use both box plots and histograms.
 
 ```{r VisualizeEcoDis, echo=TRUE}
-# // Comparison 1: Box plots of scores for eco_dis students
-#Loop over grade levels
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){ 
-    #Set variables and parameters for our boxplot
-    p <- ggplot(data, aes(x=as.factor(eco_dis), y=data[,subject])) + 
-          geom_boxplot() +
-          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Eco_Dis Level")) +
-          scale_y_continuous(name=paste(subject, " score")) +
-          scale_x_discrete(name="Eco Dis Level", limits=c("0","1"))
-    print(p) 
-    
-  } #End loop over tested subject
-} #End loop over grade level
+# // Step 1: Initialize a set of distinguishable colors for graphics
+colors <- c("red","dodgerblue3","green","coral","violet","burlywood2","grey68")
 
-# // Comparison 2: Histograms of scores for eco_dis students
+# // Comparison: Box plots and histograms of scores for Econ Disadvantage, Race, and Gender
 #Loop over grade levels
 for(grade in grades){
   
   data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
   
   #Loop over tested subject
-  for(subject in subjects){ 
-    #Set variables and parameters for our boxplot
-    p <- ggplot(data, aes(x=data[,subject], fill = as.factor(eco_dis))) + 
-          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Eco_Dis Level"))+
-          geom_histogram(alpha = 0.5, binwidth = 50) + 
-          scale_fill_manual(name="Eco_Dis Level",values=c("red","dodgerblue3"),labels=c("0","1"))+
-          scale_x_continuous(name=paste(subject, " Scale Score", ", Grade", grade)) 
-    print(p) 
+  for(subject in subjects){
+    
+    #Loop over demographic features
+    for(dem in dems){
+      
+        #Set variables and parameters for our boxplot
+        bp <- ggplot(data, aes(x=as.factor(data[,dem]), y=data[,subject])) + 
+              geom_boxplot() +
+              ggtitle(paste("Grade: ",grade,", ", labels[subject],", by ",labels[dem])) +
+              scale_y_continuous(name=labels[subject]) +
+              scale_x_discrete(name=labels[dem])
+        print(bp) #Print box plot
+        
+        #Set variables and parameters for our histogram
+        h <- ggplot(data, aes(x=data[,subject], fill = as.factor(data[,dem]))) + 
+              ggtitle(paste("Grade: ",grade,", ", labels[subject],", by ",labels[dem]))+
+              geom_histogram(alpha = 0.5, binwidth = 50) + 
+              scale_fill_manual(name=labels[dem],
+                                values=colors[1:length(levels(as.factor(data[,dem])))])+
+              scale_x_continuous(name=paste(labels[subject], ", Grade", grade)) 
+        print(h) #Print histogram
+      
+    }#End loop over demographic features
     
   } #End loop over tested subject
+  
 } #End loop over grade level
 ```
 
-```{r VisualizeRaceEthn, echo=TRUE}
-# // Comparison 3: Box plots of scores by race-ethnicity
-#Loop over grade levels
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){ 
-    #Set variables and parameters for our boxplot
-    p <- ggplot(data, aes(x=as.factor(race_ethnicity), y=data[,subject])) + 
-          geom_boxplot() +
-          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Race_Ethnicity")) +
-          scale_y_continuous(name=paste(subject, " score")) +
-          theme(axis.text.x = element_text(angle = 70))
-          scale_x_discrete(name="Eco Dis Level")
-    print(p) 
-    
-  } #End loop over tested subject
-} #End loop over grade level
-
-# // Comparison 4: Histograms of scores by race-ethnicity
-#Loop over grade levels
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){ 
-    #Set variables and parameters for our boxplot
-    p <- ggplot(data, aes(x=data[,subject], fill = as.factor(race_ethnicity))) + 
-          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Race_Ethnicity"))+
-          geom_histogram(alpha = 0.5, binwidth = 30) + 
-          scale_fill_manual(name="Race_Ethn",
-                            values=c("red","dodgerblue3","green","coral",
-                                     "violet","burlywood2","grey68"),
-                            labels=c("AI","A","B","T","H","P","W"))+
-          scale_x_continuous(name=paste(subject, " Scale Score", ", Grade", grade)) 
-    print(p) 
-    
-  } #End loop over tested subject
-} #End loop over grade level
-```
-
-```{r VisualizeGender, echo=TRUE}
-# // Comparison 5: Box plots of scores by gender
-#Loop over grade levels
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){ 
-    #Set variables and parameters for our boxplot
-    p <- ggplot(data, aes(x=as.factor(male), y=data[,subject])) + 
-          geom_boxplot() +
-          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Gender")) +
-          scale_y_continuous(name=paste(subject, " score")) +
-          scale_x_discrete(name="Gender", labels=c("female","male"))
-    print(p) 
-    
-  } #End loop over tested subject
-} #End loop over grade level
-
-# // Comparison 6: Histograms of scores by gender
-#Loop over grade levels
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){ 
-    #Set variables and parameters for our boxplot
-    p <- ggplot(data, aes(x=data[,subject], fill = as.factor(male))) + 
-          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Gender"))+
-          geom_histogram(alpha = 0.5, binwidth = 30) + 
-          scale_fill_manual(name="Eco_Dis Level",
-                            values=c("cyan","dodgerblue3"),
-                            labels=c("female","male"))+
-          scale_x_continuous(name=paste(subject, " Scale Score", ", Grade", grade)) 
-    print(p) 
-    
-  } #End loop over tested subject
-} #End loop over grade level
-```
 
 **Analytic Technique:** Next we will extend these comparisons to different student status populations, in relatoin to special education, migrancy status, and LEP status. 
 
