@@ -429,6 +429,111 @@ for(grade in grades){
 <img src="../figure/E_VisualizeEcoDis-1.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-2.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-3.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-4.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-5.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-6.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-7.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-8.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-9.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-10.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-11.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-12.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-13.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-14.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-15.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-16.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-17.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-18.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-19.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-20.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-21.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-22.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-23.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-24.png" style="display: block; margin: auto;" />
 
 
-**Analytic Technique:** Next we will extend these comparisons to different student status populations, in relatoin to special education, migrancy status, and LEP status. 
+**Analytic Technique:** Next we will extend these comparisons to different student status populations, in relation to special education, migrancy status, and LEP status. It's the same code, but now we just change our demographic indicators to the new ones we'd like to analyze (how convenient!). We start with the descriptive statistics in this first chunk, then move to visualizations in the next chunk.
+
+
+```r
+# // Step 1: Initialize Demographics to Analyze
+#Vector with features we want to analyze: Special Education, Migrancy, and LEP Status
+##NOTE MIGRANCY DATA JUST 'NAs' SO NOT INCLUDED YET IN ANALYSIS##
+dems <- c("iep","lep")
+
+# // Comparisons: Generating summary stats for Spec Ed, Migrancy, and LEP
+#Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  #Loop over tested subject
+  for(subject in subjects){
+    
+    print(paste("Grade: ",grade,", ",labels[subject])) #Print subject and grade level
+    
+    #Loop over demographic features
+    for(dem in dems){
+      
+      a<-Summarize(data[,subject] ~ data[,dem]) #Makes comparison table
+      colnames(a)[1] <- labels[dem] #Labels comparison table
+      print(a) #Prints comparison table
+      
+    } #End loop over demogrpahic features
+    
+  } #End loop over tested subject
+  
+} #End loop over grade level
+```
+
+```
+[1] "Grade:  5 ,  Reading Score"
+  Spec Ed Enrolled     n     mean       sd    min    Q1 median    Q3  max
+1                0 41035 265.3136 201.1999 -534.0 131.4  264.9 400.6 1225
+2                1  9152 263.3444 202.5527 -545.4 127.5  262.1 398.8 1017
+  LEP Status     n     mean       sd    min    Q1 median    Q3  max
+1          0 46610 264.9881 201.4374 -545.4 130.9  264.2 400.3 1225
+2          1  3577 264.5164 201.5948 -529.7 127.6  264.4 400.2 1170
+[1] "Grade:  5 ,  Math Score"
+  Spec Ed Enrolled     n     mean       sd   min    Q1 median    Q3  max
+1                0 41035 615.2123 600.9117 -2010 200.2  536.8 954.4 4606
+2                1  9152 614.7744 605.7967 -2679 197.2  537.4 953.0 3762
+  LEP Status     n     mean       sd   min    Q1 median    Q3  max
+1          0 46610 615.0614 601.9573 -2679 199.8  537.4 953.9 4606
+2          1  3577 616.0583 599.8229 -1289 200.3  527.7 958.8 3467
+[1] "Grade:  8 ,  Reading Score"
+  Spec Ed Enrolled     n     mean       sd    min    Q1 median    Q3  max
+1                0 39161 312.6652 202.0395 -497.1 178.3  312.1 448.4 1290
+2                1 11027 311.5484 203.3411 -497.9 175.5  311.1 449.3 1073
+  LEP Status     n     mean       sd    min    Q1 median    Q3  max
+1          0 46066 312.1641 202.2760 -497.9 177.5  311.6 448.2 1290
+2          1  4122 315.2784 202.8703 -438.6 179.8  315.5 454.4 1192
+[1] "Grade:  8 ,  Math Score"
+  Spec Ed Enrolled     n     mean       sd   min    Q1 median   Q3  max
+1                0 39161 709.7893 624.3217 -1788 269.4  624.9 1066 4822
+2                1 11027 711.8476 629.4282 -2481 272.0  627.8 1064 4517
+  LEP Status     n     mean       sd   min    Q1 median   Q3  max
+1          0 46066 709.8335 625.5590 -2481 269.0  625.9 1065 4822
+2          1  4122 714.8019 624.1848 -1129 280.7  621.1 1073 4517
+```
+
+Now for visualizations:
+
+
+```r
+# // Comparison: Box plots and histograms of scores for Special Education, Migrancy, and LEP Status
+#Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  #Loop over tested subject
+  for(subject in subjects){
+    
+    #Loop over demographic features
+    for(dem in dems){
+      
+        #Set variables and parameters for our boxplot
+        bp <- ggplot(data, aes(x=as.factor(data[,dem]), y=data[,subject])) + 
+              geom_boxplot() +
+              ggtitle(paste("Grade: ",grade,", ", labels[subject],", by ",labels[dem])) +
+              scale_y_continuous(name=labels[subject]) +
+              scale_x_discrete(name=labels[dem])
+        print(bp) #Print box plot
+        
+        #Set variables and parameters for our histogram
+        h <- ggplot(data, aes(x=data[,subject], fill = as.factor(data[,dem]))) + 
+              ggtitle(paste("Grade: ",grade,", ", labels[subject],", by ",labels[dem]))+
+              geom_histogram(alpha = 0.5, binwidth = 50) + 
+              scale_fill_manual(name=labels[dem],
+                                values=colors[1:length(levels(as.factor(data[,dem])))])+
+              scale_x_continuous(name=paste(labels[subject], ", Grade", grade)) 
+        print(h) #Print histogram
+      
+    }#End loop over demographic features
+    
+  } #End loop over tested subject
+  
+} #End loop over grade level
+```
+
+<img src="../figure/E_VisualizeStatus-1.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-2.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-3.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-4.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-5.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-6.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-7.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-8.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-9.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-10.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-11.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-12.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-13.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-14.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-15.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-16.png" style="display: block; margin: auto;" />
 
 **Possible Next Steps or Action Plans:** Do this for more and/or different grade levels.
