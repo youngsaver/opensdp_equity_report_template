@@ -389,4 +389,161 @@ for(grade in grades){
 } #End loop over grade level
 ```
 
+**Analytic Technique:** Often, it can be helpful to look at the intersections of the demographic data we pulled. In particular, exploring possible gaps among combinations of race, socioeconomic status, gender, and student label status (LEP, Spec Ed, Migrancy, etc.) can elucidate further achievement gaps in the data. Here, we will explore two intersections: race-ethnicity and gender as well as socioeconomic status and special education enrollment.
+
+We start with descriptive statistics:
+
+```{r DescriptiveCombos, echo=TRUE}
+# // Analysis 1: Comparing within groups--Gender gaps within race
+
+#Set the feature you would like to compare within
+group.by <- "race_ethnicity"
+
+#Set the feature you are comparing
+compare.by <- "male"
+
+# Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  res <- levels(as.factor(data[,group.by])) #All the different race-ethnicities we will explore
+  
+  #Loop over tested subject
+  for(subject in subjects){
+    
+    print(paste("Grade: ",grade,", ",labels[subject])) #Print subject and grade level
+    
+    #Loop over race-ethnicities
+    for(re in res){
+      
+      #Isolates observations from particular race-ethnicity
+      data.res <- data[data[,group.by]==re,]
+      
+      #Makes comparison table across genders within each race-ethnicity group
+      a<-Summarize(data.res[,subject] ~ data.res[,compare.by]) #Makes comparison table
+      colnames(a)[1] <- labels[compare.by]
+      print(paste(labels[group.by],": ",re))
+      print(a) #Prints comparison table
+      
+    } #End loop over race-ethnicities
+    
+    cat("\n\n") #spacer line
+    
+  } #End loop over tested subject
+  
+} #End loop over grade level
+
+# // Analysis 2: Comparing proportions enrolled in a program
+#This analysis will compare what percentage of each econ_dis category has an IEP
+#First will look at proportions among all grade levels
+cont.table <- with(texas.data, table(eco_dis,iep))
+
+cont.table #Frequency table
+round(prop.table(cont.table,1)*100) #Proportion contingency table
+
+#Now we will look at proportions within grade levels
+#Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  print(paste("Grade: ",grade)) #Print grade level
+  
+  cont.table <- with(data, table(eco_dis,iep))
+  print(cont.table) #Frequency table
+  print(round(prop.table(cont.table,1)*100)) #Proportion contingency table
+  
+} #End loop over grade level
+
+# // Analysis 3: Comparing within groups--Special Ed gaps within Socioeconomic levels
+#Note: same code as analysis 1, just with different set features in first lines
+#Set the feature you would like to compare within
+group.by <- "eco_dis"
+
+#Set the feature you are comparing
+compare.by <- "iep"
+
+# Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  res <- levels(as.factor(data[,group.by])) #All the different levels of economic disadvantage
+  
+  #Loop over tested subject
+  for(subject in subjects){
+    
+    print(paste("Grade: ",grade,", ",labels[subject])) #Print subject and grade level
+    
+    #Loop over levels of econ-dis
+    for(re in res){
+      
+      #Isolates observations from particular econ-dis level
+      data.res <- data[data[,group.by]==re,]
+      
+      #Makes comparison table for special ed enrollemnt within econ-dis level
+      a<-Summarize(data.res[,subject] ~ data.res[,compare.by]) #Makes comparison table
+      colnames(a)[1] <- labels[compare.by]
+      print(paste(labels[group.by],": ",re))
+      print(a) #Prints comparison table
+      
+    } #End loop over econ-dis level
+    
+    cat("\n\n") #spacer line
+    
+  } #End loop over tested subject
+  
+} #End loop over grade level
+
+```
+
+We continue with data visuals:
+
+```{r VisualizeCombos, echo=TRUE}
+# // Comparison: Box plots and histograms of scores comparing gender within race-ethnicity
+
+#Set the feature you would like to compare within
+group.by <- "race_ethnicity"
+
+#Set the feature you are comparing
+compare.by <- "male"
+
+#Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  res <- levels(as.factor(data[,group.by])) #All the different race-ethnicities we will explore
+  
+  #Loop over tested subject
+  for(subject in subjects){
+    
+    #Loop over demographic features
+    for(re in res){
+      
+        #Isolates observations from particular race-ethnicity
+        data.res <- data[data[,group.by]==re,]
+      
+        #Set variables and parameters for our boxplot
+        bp <- ggplot(data.res, aes(x=as.factor(data.res[,compare.by]), y=data.res[,subject])) + 
+              geom_boxplot() +
+              ggtitle(paste("Grade: ",grade,", ", labels[subject],", ",re)) +
+              scale_y_continuous(name=labels[subject]) +
+              scale_x_discrete(name=labels[compare.by])
+        print(bp) #Print box plot
+        
+        #Set variables and parameters for our histogram
+        h <- ggplot(data.res, aes(x=data.res[,subject], fill = as.factor(data.res[,compare.by]))) + 
+              ggtitle(paste("Grade: ",grade,", ", labels[subject],", ",re))+
+              geom_histogram(alpha = 0.5, binwidth = 50) + 
+              scale_fill_manual(name=labels[compare.by],
+                                values=colors[1:length(levels(as.factor(data.res[,compare.by])))])+
+              scale_x_continuous(name=paste(labels[subject], ", Grade", grade)) 
+        print(h) #Print histogram
+      
+    }#End loop over race-ethnicity
+    
+  } #End loop over tested subject
+  
+} #End loop over grade level
+```
+
 **Possible Next Steps or Action Plans:** Do this for more and/or different grade levels.
