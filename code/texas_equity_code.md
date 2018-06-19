@@ -68,7 +68,7 @@ The Texas Education Agency data files have hundreds of features attached to each
 
 #### Loading the OpenSDP Dataset and R Packages
 
-This guide takes advantage of the OpenSDP synthetic dataset and several key R packages. The first chunk of code below loads the R packages (make sure to install first!), and the second chunk loads the dataset.
+This guide takes advantage of the OpenSDP synthetic dataset and several key R packages. The first chunk of code below loads the R packages (make sure to install first!), and the second chunk loads the dataset and provides us with variable labels.
 
 
 ```r
@@ -93,8 +93,22 @@ source("../R/functions.R")
 # // Step 1: Read in csv file of our dataset, naming it "texas.data"
 texas.data <- read.csv("../data/synth_texas.csv")  
 
-# // Step 2: Attaches data file, enabling calling of feature names directly
-#attach(texas.data)
+# // Step 2: View data file
+View(texas.data)
+
+# // Step 3: Create a vector of labels for feature names in our dataset 
+#These labels will appear in visualizations and tables
+labels <- c("Grade","School ID","Student ID","Gender", "Race-Ethnicity",
+            "Econ Disadvantage Status","Title 1 Status","Migrancy Status",
+            "LEP Status","Spec Ed Enrolled","Reading Score",
+            "Math Score","Writing Score","Writing Comp Score")
+
+
+#Pairs labels with feature names from file
+names(labels) <- c("grade_level","school_code","sid","male","race_ethnicity",
+                   "eco_dis","title_1","migrant",
+                   "lep","iep","rdg_ss",
+                   "math_ss","wrtg_ss","composition")
 ```
 
 
@@ -148,7 +162,7 @@ This guide is an open-source document hosted on Github and generated using R Mar
 - Why do these differences occur?
 - What differences do you want to explore further?
 
-**Analytic Technique:** Calculate the summary statistics for exam performance, for all 5th and 8th grade exam takers.
+**Analytic Technique:** Calculate the summary statistics for exam performance, for all 5th and 8th grade exam takers. Note: Once you set which tests and which grade levels you would like to analyze here, the code (as written) will analyze those grade levels and tests for the rest of the guide.
 
 ```r
 # // Step 1: Set which tested grade levels to analyze (5th and 8th here)
@@ -163,14 +177,16 @@ for(grade in grades){
   
   data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
   print(paste("grade level: ",grade))
-  print(summary(data[,subjects])) #Print summary stats for grade
+  a <- summary(data[,subjects]) #Summary stats table for grade
+  colnames(a) <- labels[subjects]  #Label table
+  print(a) #Print summary table
   
 } #End loop over grade level
 ```
 
 ```
 [1] "grade level:  5"
-     rdg_ss          math_ss       
+ Reading Score    Math Score       
  Min.   :-545.4   Min.   :-2678.8  
  1st Qu.: 130.8   1st Qu.:  199.8  
  Median : 264.2   Median :  536.8  
@@ -178,7 +194,7 @@ for(grade in grades){
  3rd Qu.: 400.3   3rd Qu.:  954.2  
  Max.   :1224.7   Max.   : 4606.0  
 [1] "grade level:  8"
-     rdg_ss          math_ss       
+ Reading Score    Math Score       
  Min.   :-497.9   Min.   :-2481.2  
  1st Qu.: 177.6   1st Qu.:  270.0  
  Median : 311.9   Median :  625.5  
@@ -200,8 +216,8 @@ for(subject in subjects){
     #Set variables and parameters for our boxplot
     p <- ggplot(data, aes(x=as.factor(grade_level), y=data[,subject])) + 
           geom_boxplot() +
-          ggtitle(paste("Subject: ",subject, ", Scores by Grade Level")) +
-          scale_y_continuous(name=paste(subject, " score")) +
+          ggtitle(paste(labels[subject], ", by Grade Level")) +
+          scale_y_continuous(name=labels[subject]) +
           scale_x_discrete(name="Grade Level")
     print(p) 
     
@@ -222,9 +238,9 @@ for(grade in grades){
   for(subject in subjects){ 
     #Set variables and parameters for our boxplot
     p <- ggplot(data, aes(x=data[,subject])) + 
-          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores (ALL)"))+
+          ggtitle(paste("Grade: ",grade,", ",labels[subject], " (all students)"))+
           geom_histogram(alpha = 0.5, binwidth = 50, fill = "dodgerblue", color = "dodgerblue") + 
-          scale_x_continuous(name=paste(subject, " Scale Score", ", Grade", grade)) 
+          scale_x_continuous(name=paste(labels[subject])) 
     print(p) 
     
   } #End loop over tested subject
@@ -237,16 +253,29 @@ for(grade in grades){
 
 
 ```r
-# // Comparison 1: Summary stats for Eco Dis students
+# // Step 1: Initialize Demographics to Analyze
+#Vector with features we want to analyze: Econ Disadvantage, Race Ethnicity, Gender
+dems <- c("eco_dis","race_ethnicity","male")
+
+# // Comparisons: Generating summary stats for Eco Dis, Race Ethnicity, and Gender
 #Loop over grade levels
 for(grade in grades){
   
   data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
   
   #Loop over tested subject
-  for(subject in subjects){ 
-    print(paste("grade: ",grade,", subject: ",subject,sep="")) #Print subject and grade level
-    print(Summarize(data[,subject] ~ data$eco_dis)) #Prints comparison table
+  for(subject in subjects){
+    
+    print(paste("Grade: ",grade,", ",labels[subject])) #Print subject and grade level
+    
+    #Loop over demographic features
+    for(dem in dems){
+      
+      a<-Summarize(data[,subject] ~ data[,dem]) #Makes comparison table
+      colnames(a)[1] <- labels[dem] #Labels comparison table
+      print(a) #Prints comparison table
+      
+    } #End loop over demogrpahic features
     
   } #End loop over tested subject
   
@@ -254,45 +283,11 @@ for(grade in grades){
 ```
 
 ```
-[1] "grade: 5, subject: rdg_ss"
-  data$eco_dis     n     mean       sd    min  Q1 median    Q3  max
-1            0 31650 266.0917 201.5706 -534.0 132  264.4 401.9 1135
-2            1 18537 263.0128 201.2255 -545.4 128  264.1 397.4 1225
-[1] "grade: 5, subject: math_ss"
-  data$eco_dis     n     mean       sd   min    Q1 median    Q3  max
-1            0 31650 617.1197 604.9358 -1866 199.8  538.7 958.8 4445
-2            1 18537 611.7395 596.4073 -2679 200.0  533.4 945.4 4606
-[1] "grade: 8, subject: rdg_ss"
-  data$eco_dis     n     mean       sd    min    Q1 median    Q3  max
-1            0 32290 314.0757 202.4790 -497.1 179.0  313.0 449.8 1159
-2            1 17898 309.4325 202.0173 -497.9 174.9  309.9 446.0 1290
-[1] "grade: 8, subject: math_ss"
-  data$eco_dis     n     mean       sd   min    Q1 median   Q3  max
-1            0 32290 714.8031 630.5780 -1788 270.2  628.3 1072 4655
-2            1 17898 702.0119 615.9986 -2481 269.9  620.9 1054 4822
-```
-
-```r
-# // Comparison 2: Summary stats by race-ethnicity
-# Reading and math comparison between groups
-#Loop over grade level
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){ 
-    print(paste(grade,subject,sep=",")) #Print subject and grade level
-    print(Summarize(data[,subject] ~ data$race_ethnicity)) #Prints comparison table
-    
-  } #End loop over tested subject
-  
-} #End loop over grade level
-```
-
-```
-[1] "5,rdg_ss"
-                        data$race_ethnicity     n     mean       sd     min
+[1] "Grade:  5 ,  Reading Score"
+  Econ Disadvantage Status     n     mean       sd    min  Q1 median    Q3  max
+1                        0 31650 266.0917 201.5706 -534.0 132  264.4 401.9 1135
+2                        1 18537 263.0128 201.2255 -545.4 128  264.1 397.4 1225
+                             Race-Ethnicity     n     mean       sd     min
 1          American Indian or Alaska Native   354 257.5892 196.4762 -465.70
 2                                     Asian  2451 278.8205 208.7169 -460.30
 3                 Black or African American  6199 259.3710 203.0171 -545.40
@@ -308,8 +303,17 @@ for(grade in grades){
 5 133.4  268.1 400.1  987.1
 6 183.7  294.6 416.9  800.0
 7 130.9  263.2 398.9 1170.0
-[1] "5,math_ss"
-                        data$race_ethnicity     n     mean       sd     min
+  Gender     n     mean       sd    min    Q1 median    Q3  max
+1 Female 24344 265.7453 201.0299 -534.0 131.5  264.9 401.2 1170
+2   Male 25843 264.2095 201.8396 -545.4 129.8  263.5 399.0 1225
+[1] "Grade:  5 ,  Math Score"
+  Econ Disadvantage Status     n     mean       sd   min    Q1 median    Q3
+1                        0 31650 617.1197 604.9358 -1866 199.8  538.7 958.8
+2                        1 18537 611.7395 596.4073 -2679 200.0  533.4 945.4
+   max
+1 4445
+2 4606
+                             Race-Ethnicity     n     mean       sd     min
 1          American Indian or Alaska Native   354 585.6512 565.5531 -1340.0
 2                                     Asian  2451 649.2518 620.1701 -1236.0
 3                 Black or African American  6199 603.5025 599.2157 -2679.0
@@ -325,8 +329,17 @@ for(grade in grades){
 5 208.6  538.5  950.0 4272
 6 325.1  624.0 1005.0 2364
 7 197.8  536.6  953.5 4606
-[1] "8,rdg_ss"
-                        data$race_ethnicity     n     mean       sd     min
+  Gender     n     mean       sd   min    Q1 median    Q3  max
+1 Female 24344 613.5182 600.0064 -2010 198.9  536.2 949.7 4606
+2   Male 25843 616.6530 603.4913 -2679 200.9  537.5 958.9 4445
+[1] "Grade:  8 ,  Reading Score"
+  Econ Disadvantage Status     n     mean       sd    min    Q1 median    Q3
+1                        0 32290 314.0757 202.4790 -497.1 179.0  313.0 449.8
+2                        1 17898 309.4325 202.0173 -497.9 174.9  309.9 446.0
+   max
+1 1159
+2 1290
+                             Race-Ethnicity     n     mean       sd     min
 1          American Indian or Alaska Native   356 305.9883 196.8412 -433.20
 2                                     Asian  2449 325.1233 209.1188 -412.80
 3                 Black or African American  6196 307.0588 203.6341 -497.90
@@ -342,8 +355,14 @@ for(grade in grades){
 5 180.4  314.7 448.8 1019.0
 6 238.9  335.3 470.5  843.6
 7 177.7  310.4 447.8 1195.0
-[1] "8,math_ss"
-                        data$race_ethnicity     n     mean       sd     min
+  Gender     n     mean       sd    min    Q1 median    Q3  max
+1 Female 24356 313.2493 201.9476 -497.1 178.4    313 449.5 1192
+2   Male 25832 311.6378 202.6803 -497.9 176.6    311 447.5 1290
+[1] "Grade:  8 ,  Math Score"
+  Econ Disadvantage Status     n     mean       sd   min    Q1 median   Q3  max
+1                        0 32290 714.8031 630.5780 -1788 270.2  628.3 1072 4655
+2                        1 17898 702.0119 615.9986 -2481 269.9  620.9 1054 4822
+                             Race-Ethnicity     n     mean       sd     min
 1          American Indian or Alaska Native   356 681.7163 588.2992 -1280.0
 2                                     Asian  2449 741.7295 643.0427 -1146.0
 3                 Black or African American  6196 700.6656 622.4377 -2481.0
@@ -359,191 +378,56 @@ for(grade in grades){
 5 276.3  630.3 1053 4517
 6 410.5  736.5 1143 2513
 7 268.0  625.0 1065 4822
-```
-
-```r
-# // Comparison 3: Summary stats by gender
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){ 
-    print(paste("grade: ",grade,", subject: ",subject,sep="")) #Print subject and grade level
-    print(Summarize(data[,subject] ~ data$male)) #Prints comparison table
-    
-  } #End loop over tested subject
-  
-} #End loop over grade level
-```
-
-```
-[1] "grade: 5, subject: rdg_ss"
-  data$male     n     mean       sd    min    Q1 median    Q3  max
-1    Female 24344 265.7453 201.0299 -534.0 131.5  264.9 401.2 1170
-2      Male 25843 264.2095 201.8396 -545.4 129.8  263.5 399.0 1225
-[1] "grade: 5, subject: math_ss"
-  data$male     n     mean       sd   min    Q1 median    Q3  max
-1    Female 24344 613.5182 600.0064 -2010 198.9  536.2 949.7 4606
-2      Male 25843 616.6530 603.4913 -2679 200.9  537.5 958.9 4445
-[1] "grade: 8, subject: rdg_ss"
-  data$male     n     mean       sd    min    Q1 median    Q3  max
-1    Female 24356 313.2493 201.9476 -497.1 178.4    313 449.5 1192
-2      Male 25832 311.6378 202.6803 -497.9 176.6    311 447.5 1290
-[1] "grade: 8, subject: math_ss"
-  data$male     n     mean       sd   min    Q1 median   Q3  max
-1    Female 24356 708.1860 623.8962 -1788 269.2  624.7 1060 4822
-2      Male 25832 712.1797 626.9010 -2481 271.0  625.9 1071 4655
+  Gender     n     mean       sd   min    Q1 median   Q3  max
+1 Female 24356 708.1860 623.8962 -1788 269.2  624.7 1060 4822
+2   Male 25832 712.1797 626.9010 -2481 271.0  625.9 1071 4655
 ```
 
 **Analytic Technique:** In addition to these raw numbers, it will help to visualize these comparisons, to give us a sense of scale and shape in these gaps. To do so, we will use both box plots and histograms.
 
 
 ```r
-# // Comparison 1: Box plots of scores for eco_dis students
+# // Step 1: Initialize a set of distinguishable colors for graphics
+colors <- c("red","dodgerblue3","green","coral","violet","burlywood2","grey68")
+
+# // Comparison: Box plots and histograms of scores for Econ Disadvantage, Race, and Gender
 #Loop over grade levels
 for(grade in grades){
   
   data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
   
   #Loop over tested subject
-  for(subject in subjects){ 
-    #Set variables and parameters for our boxplot
-    p <- ggplot(data, aes(x=as.factor(eco_dis), y=data[,subject])) + 
-          geom_boxplot() +
-          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Eco_Dis Level")) +
-          scale_y_continuous(name=paste(subject, " score")) +
-          scale_x_discrete(name="Eco Dis Level", limits=c("0","1"))
-    print(p) 
+  for(subject in subjects){
+    
+    #Loop over demographic features
+    for(dem in dems){
+      
+        #Set variables and parameters for our boxplot
+        bp <- ggplot(data, aes(x=as.factor(data[,dem]), y=data[,subject])) + 
+              geom_boxplot() +
+              ggtitle(paste("Grade: ",grade,", ", labels[subject],", by ",labels[dem])) +
+              scale_y_continuous(name=labels[subject]) +
+              scale_x_discrete(name=labels[dem])
+        print(bp) #Print box plot
+        
+        #Set variables and parameters for our histogram
+        h <- ggplot(data, aes(x=data[,subject], fill = as.factor(data[,dem]))) + 
+              ggtitle(paste("Grade: ",grade,", ", labels[subject],", by ",labels[dem]))+
+              geom_histogram(alpha = 0.5, binwidth = 50) + 
+              scale_fill_manual(name=labels[dem],
+                                values=colors[1:length(levels(as.factor(data[,dem])))])+
+              scale_x_continuous(name=paste(labels[subject], ", Grade", grade)) 
+        print(h) #Print histogram
+      
+    }#End loop over demographic features
     
   } #End loop over tested subject
+  
 } #End loop over grade level
 ```
 
-<img src="../figure/E_VisualizeEcoDis-1.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-2.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-3.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-4.png" style="display: block; margin: auto;" />
+<img src="../figure/E_VisualizeEcoDis-1.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-2.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-3.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-4.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-5.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-6.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-7.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-8.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-9.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-10.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-11.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-12.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-13.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-14.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-15.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-16.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-17.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-18.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-19.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-20.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-21.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-22.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-23.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-24.png" style="display: block; margin: auto;" />
 
-```r
-# // Comparison 2: Histograms of scores for eco_dis students
-#Loop over grade levels
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){ 
-    #Set variables and parameters for our boxplot
-    p <- ggplot(data, aes(x=data[,subject], fill = as.factor(eco_dis))) + 
-          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Eco_Dis Level"))+
-          geom_histogram(alpha = 0.5, binwidth = 50) + 
-          scale_fill_manual(name="Eco_Dis Level",values=c("red","dodgerblue3"),labels=c("0","1"))+
-          scale_x_continuous(name=paste(subject, " Scale Score", ", Grade", grade)) 
-    print(p) 
-    
-  } #End loop over tested subject
-} #End loop over grade level
-```
-
-<img src="../figure/E_VisualizeEcoDis-5.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-6.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-7.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-8.png" style="display: block; margin: auto;" />
-
-
-```r
-# // Comparison 3: Box plots of scores by race-ethnicity
-#Loop over grade levels
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){ 
-    #Set variables and parameters for our boxplot
-    p <- ggplot(data, aes(x=as.factor(race_ethnicity), y=data[,subject])) + 
-          geom_boxplot() +
-          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Race_Ethnicity")) +
-          scale_y_continuous(name=paste(subject, " score")) +
-          theme(axis.text.x = element_text(angle = 70))
-          scale_x_discrete(name="Eco Dis Level")
-    print(p) 
-    
-  } #End loop over tested subject
-} #End loop over grade level
-```
-
-<img src="../figure/E_VisualizeRaceEthn-1.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeRaceEthn-2.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeRaceEthn-3.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeRaceEthn-4.png" style="display: block; margin: auto;" />
-
-```r
-# // Comparison 4: Histograms of scores by race-ethnicity
-#Loop over grade levels
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){ 
-    #Set variables and parameters for our boxplot
-    p <- ggplot(data, aes(x=data[,subject], fill = as.factor(race_ethnicity))) + 
-          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Race_Ethnicity"))+
-          geom_histogram(alpha = 0.5, binwidth = 30) + 
-          scale_fill_manual(name="Race_Ethn",
-                            values=c("red","dodgerblue3","green","coral",
-                                     "violet","burlywood2","grey68"),
-                            labels=c("AI","A","B","T","H","P","W"))+
-          scale_x_continuous(name=paste(subject, " Scale Score", ", Grade", grade)) 
-    print(p) 
-    
-  } #End loop over tested subject
-} #End loop over grade level
-```
-
-<img src="../figure/E_VisualizeRaceEthn-5.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeRaceEthn-6.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeRaceEthn-7.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeRaceEthn-8.png" style="display: block; margin: auto;" />
-
-
-```r
-# // Comparison 5: Box plots of scores by gender
-#Loop over grade levels
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){ 
-    #Set variables and parameters for our boxplot
-    p <- ggplot(data, aes(x=as.factor(male), y=data[,subject])) + 
-          geom_boxplot() +
-          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Gender")) +
-          scale_y_continuous(name=paste(subject, " score")) +
-          scale_x_discrete(name="Gender", labels=c("female","male"))
-    print(p) 
-    
-  } #End loop over tested subject
-} #End loop over grade level
-```
-
-<img src="../figure/E_VisualizeGender-1.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeGender-2.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeGender-3.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeGender-4.png" style="display: block; margin: auto;" />
-
-```r
-# // Comparison 6: Histograms of scores by gender
-#Loop over grade levels
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){ 
-    #Set variables and parameters for our boxplot
-    p <- ggplot(data, aes(x=data[,subject], fill = as.factor(male))) + 
-          ggtitle(paste("Grade: ",grade,", Subject: ",subject, ", Scores by Gender"))+
-          geom_histogram(alpha = 0.5, binwidth = 30) + 
-          scale_fill_manual(name="Eco_Dis Level",
-                            values=c("cyan","dodgerblue3"),
-                            labels=c("female","male"))+
-          scale_x_continuous(name=paste(subject, " Scale Score", ", Grade", grade)) 
-    print(p) 
-    
-  } #End loop over tested subject
-} #End loop over grade level
-```
-
-<img src="../figure/E_VisualizeGender-5.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeGender-6.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeGender-7.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeGender-8.png" style="display: block; margin: auto;" />
 
 **Analytic Technique:** Next we will extend these comparisons to different student status populations, in relatoin to special education, migrancy status, and LEP status. 
 
