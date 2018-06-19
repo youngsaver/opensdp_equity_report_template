@@ -536,4 +536,378 @@ for(grade in grades){
 
 <img src="../figure/E_VisualizeStatus-1.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-2.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-3.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-4.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-5.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-6.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-7.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-8.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-9.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-10.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-11.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-12.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-13.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-14.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-15.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeStatus-16.png" style="display: block; margin: auto;" />
 
+**Analytic Technique:** Often, it can be helpful to look at the intersections of the demographic data we pulled. In particular, exploring possible gaps among combinations of race, socioeconomic status, gender, and student label status (LEP, Spec Ed, Migrancy, etc.) can elucidate further achievement gaps in the data. Here, we will explore two intersections: race-ethnicity and gender as well as socioeconomic status and special education enrollment.
+
+We start with descriptive statistics:
+
+
+```r
+# // Analysis 1: Comparing within groups--Gender gaps within race
+
+#Set the feature you would like to compare within
+group.by <- "race_ethnicity"
+
+#Set the feature you are comparing
+compare.by <- "male"
+
+# Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  res <- levels(as.factor(data[,group.by])) #All the different race-ethnicities we will explore
+  
+  #Loop over tested subject
+  for(subject in subjects){
+    
+    print(paste("Grade: ",grade,", ",labels[subject])) #Print subject and grade level
+    
+    #Loop over race-ethnicities
+    for(re in res){
+      
+      #Isolates observations from particular race-ethnicity
+      data.res <- data[data[,group.by]==re,]
+      
+      #Makes comparison table across genders within each race-ethnicity group
+      a<-Summarize(data.res[,subject] ~ data.res[,compare.by]) #Makes comparison table
+      colnames(a)[1] <- labels[compare.by]
+      print(paste(labels[group.by],": ",re))
+      print(a) #Prints comparison table
+      
+    } #End loop over race-ethnicities
+    
+    cat("\n\n") #spacer line
+    
+  } #End loop over tested subject
+  
+} #End loop over grade level
+```
+
+```
+[1] "Grade:  5 ,  Reading Score"
+[1] "Race-Ethnicity :  American Indian or Alaska Native"
+  Gender   n     mean       sd    min    Q1 median    Q3   max
+1 Female 173 264.9333 205.4628 -465.7 123.5  253.4 392.4 759.9
+2   Male 181 250.5697 187.7883 -160.7 107.8  262.8 364.3 830.3
+[1] "Race-Ethnicity :  Asian"
+  Gender    n     mean       sd    min    Q1 median    Q3   max
+1 Female 1205 276.5619 207.3077 -378.2 136.7  274.4 414.7 849.9
+2   Male 1246 281.0048 210.1308 -460.3 143.0  278.5 426.7 945.5
+[1] "Race-Ethnicity :  Black or African American"
+  Gender    n     mean       sd    min    Q1 median    Q3  max
+1 Female 2962 261.8883 203.0079 -447.2 124.7  262.4 399.5 1017
+2   Male 3237 257.0675 203.0296 -545.4 117.4  255.6 395.6 1129
+[1] "Race-Ethnicity :  Demographic Race Two or More Races"
+  Gender   n     mean       sd    min    Q1 median    Q3    max
+1 Female 519 277.0407 199.8005 -285.8 134.8  279.0 416.6  877.6
+2   Male 547 261.5569 196.7313 -365.3 132.1  262.3 393.3 1225.0
+[1] "Race-Ethnicity :  Hispanic or Latino Ethnicity"
+  Gender    n     mean       sd    min    Q1 median    Q3   max
+1 Female 3990 266.6916 199.8802 -443.3 136.1  266.5 399.2 913.5
+2   Male 4282 267.4480 203.6800 -456.0 131.0  269.4 400.2 987.1
+[1] "Race-Ethnicity :  Native Hawaiian or Other Pacific Islander"
+  Gender  n     mean       sd     min    Q1 median    Q3   max
+1 Female 36 319.5892 195.1809 -16.590 218.6  262.1 425.1 800.0
+2   Male 36 315.6305 183.4705  -4.068 180.0  313.5 413.1 675.8
+[1] "Race-Ethnicity :  White"
+  Gender     n     mean       sd    min    Q1 median    Q3  max
+1 Female 15459 264.9015 200.4312 -534.0 130.9  264.1 400.5 1170
+2   Male 16314 263.6206 200.7558 -508.6 131.0  262.3 397.6 1135
+
+
+[1] "Grade:  5 ,  Math Score"
+[1] "Race-Ethnicity :  American Indian or Alaska Native"
+  Gender   n     mean       sd     min    Q1 median    Q3  max
+1 Female 173 573.5019 550.3889 -1340.0 199.6  484.3 906.3 2349
+2   Male 181 597.2636 580.9648  -641.2 200.5  514.8 964.5 2627
+[1] "Race-Ethnicity :  Asian"
+  Gender    n     mean       sd   min    Q1 median    Q3  max
+1 Female 1205 646.1932 613.3926 -1055 226.9  569.5 981.1 3281
+2   Male 1246 652.2097 626.8868 -1236 230.2  560.7 987.2 3762
+[1] "Race-Ethnicity :  Black or African American"
+  Gender    n     mean       sd   min    Q1 median    Q3  max
+1 Female 2962 611.2126 602.8132 -1482 189.0  529.9 953.6 3201
+2   Male 3237 596.4474 595.9106 -2679 179.2  516.0 949.5 3888
+[1] "Race-Ethnicity :  Demographic Race Two or More Races"
+  Gender   n     mean       sd   min    Q1 median    Q3  max
+1 Female 519 645.8481 611.5013 -1062 212.2  552.4 980.2 2780
+2   Male 547 594.3796 563.6841 -1039 217.3  515.6 907.5 3044
+[1] "Race-Ethnicity :  Hispanic or Latino Ethnicity"
+  Gender    n     mean       sd   min    Q1 median    Q3  max
+1 Female 3990 610.8442 590.4863 -1551 210.4  536.8 938.4 4200
+2   Male 4282 620.8186 606.4930 -1895 207.8  540.2 961.5 4272
+[1] "Race-Ethnicity :  Native Hawaiian or Other Pacific Islander"
+  Gender  n     mean       sd     min    Q1 median     Q3  max
+1 Female 36 650.3791 491.1650 -153.20 333.3  580.7  931.7 2103
+2   Male 36 810.0711 659.2735  -37.93 317.3  689.6 1135.0 2364
+[1] "Race-Ethnicity :  White"
+  Gender     n     mean       sd   min    Q1 median    Q3  max
+1 Female 15459 611.3798 601.2078 -2010 194.6  534.0 946.2 4606
+2   Male 16314 617.3883 603.6569 -1866 201.2  539.1 958.5 4445
+
+
+[1] "Grade:  8 ,  Reading Score"
+[1] "Race-Ethnicity :  American Indian or Alaska Native"
+  Gender   n     mean       sd    min    Q1 median    Q3   max
+1 Female 174 312.1718 206.9839 -433.2 181.3  302.9 432.5 817.1
+2   Male 182 300.0766 187.0128 -128.0 155.0  307.6 414.8 855.8
+[1] "Race-Ethnicity :  Asian"
+  Gender    n     mean       sd    min    Q1 median    Q3   max
+1 Female 1208 323.0186 208.3553 -336.5 181.8  322.0 463.4 906.6
+2   Male 1241 327.1720 209.9229 -412.8 191.3  322.8 471.2 987.9
+[1] "Race-Ethnicity :  Black or African American"
+  Gender    n     mean       sd    min    Q1 median    Q3  max
+1 Female 2959 309.5911 203.9190 -413.5 170.9  313.4 447.5 1073
+2   Male 3237 304.7440 203.3773 -497.9 165.6  304.8 443.5 1169
+[1] "Race-Ethnicity :  Demographic Race Two or More Races"
+  Gender   n     mean       sd    min    Q1 median    Q3    max
+1 Female 518 324.4013 200.8833 -215.6 189.1  325.8 466.6  928.8
+2   Male 547 307.7793 196.6793 -300.6 181.6  309.4 438.6 1290.0
+[1] "Race-Ethnicity :  Hispanic or Latino Ethnicity"
+  Gender    n     mean       sd    min    Q1 median    Q3    max
+1 Female 3989 314.0410 200.8283 -385.5 182.6  313.5 448.5  981.8
+2   Male 4274 314.3128 204.7115 -415.5 178.2  315.7 448.9 1019.0
+[1] "Race-Ethnicity :  Native Hawaiian or Other Pacific Islander"
+  Gender  n     mean       sd   min    Q1 median    Q3   max
+1 Female 36 363.8570 194.6912 31.07 258.7  309.5 468.2 843.6
+2   Male 36 362.5028 184.6153 39.56 231.6  359.0 470.5 727.3
+[1] "Race-Ethnicity :  White"
+  Gender     n     mean       sd    min    Q1 median    Q3  max
+1 Female 15472 312.5030 201.3299 -497.1 177.7  311.3 448.7 1192
+2   Male 16315 311.2693 201.7916 -460.5 177.8  309.8 446.8 1195
+
+
+[1] "Grade:  8 ,  Math Score"
+[1] "Race-Ethnicity :  American Indian or Alaska Native"
+  Gender   n     mean       sd     min    Q1 median   Q3  max
+1 Female 174 661.8594 573.0826 -1280.0 264.0  594.3 1022 2450
+2   Male 182 700.7003 603.4549  -468.5 269.9  582.8 1092 2705
+[1] "Race-Ethnicity :  Asian"
+  Gender    n     mean       sd     min    Q1 median   Q3  max
+1 Female 1208 739.2915 638.0390  -916.2 295.7  651.5 1093 3590
+2   Male 1241 744.1027 648.1247 -1146.0 307.3  656.7 1107 3987
+[1] "Race-Ethnicity :  Black or African American"
+  Gender    n    mean       sd   min    Q1 median   Q3  max
+1 Female 2959 708.209 627.9286 -1414 266.4  615.1 1068 3494
+2   Male 3237 693.770 617.3921 -2481 246.4  609.0 1066 4125
+[1] "Race-Ethnicity :  Demographic Race Two or More Races"
+  Gender   n     mean       sd    min    Q1 median   Q3  max
+1 Female 518 741.7711 639.5891 -876.4 280.5  643.3 1092 3003
+2   Male 547 686.3318 584.4080 -883.1 289.2  624.5 1012 3179
+[1] "Race-Ethnicity :  Hispanic or Latino Ethnicity"
+  Gender    n     mean       sd   min    Q1 median   Q3  max
+1 Female 3989 704.0126 612.5593 -1388 278.5  630.1 1044 4493
+2   Male 4274 715.0843 630.9041 -1701 274.7  631.1 1065 4517
+[1] "Race-Ethnicity :  Native Hawaiian or Other Pacific Islander"
+  Gender  n     mean       sd     min    Q1 median   Q3  max
+1 Female 36 735.8747 514.4615 -174.30 410.5  706.2 1026 2248
+2   Male 36 909.5029 691.5782  -24.75 415.6  803.3 1226 2513
+[1] "Race-Ethnicity :  White"
+  Gender     n     mean       sd   min    Q1 median   Q3  max
+1 Female 15472 706.1611 625.1439 -1788 264.5  623.0 1058 4822
+2   Male 16315 713.2024 627.4732 -1646 271.4  625.9 1073 4655
+```
+
+```r
+# // Analysis 2: Comparing proportions enrolled in a program
+#This analysis will compare what percentage of each econ_dis category has an IEP
+#First will look at proportions among all grade levels
+cont.table <- with(texas.data, table(eco_dis,iep))
+
+cont.table #Frequency table
+```
+
+```
+       iep
+eco_dis      0      1
+      0 206264  49696
+      1 114756  31306
+```
+
+```r
+round(prop.table(cont.table,1)*100) #Proportion contingency table
+```
+
+```
+       iep
+eco_dis  0  1
+      0 81 19
+      1 79 21
+```
+
+```r
+#Now we will look at proportions within grade levels
+#Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  print(paste("Grade: ",grade)) #Print grade level
+  
+  cont.table <- with(data, table(eco_dis,iep))
+  print(cont.table) #Frequency table
+  print(round(prop.table(cont.table,1)*100)) #Proportion contingency table
+  
+} #End loop over grade level
+```
+
+```
+[1] "Grade:  5"
+       iep
+eco_dis     0     1
+      0 26166  5484
+      1 14869  3668
+       iep
+eco_dis  0  1
+      0 83 17
+      1 80 20
+[1] "Grade:  8"
+       iep
+eco_dis     0     1
+      0 25319  6971
+      1 13842  4056
+       iep
+eco_dis  0  1
+      0 78 22
+      1 77 23
+```
+
+```r
+# // Analysis 3: Comparing within groups--Special Ed gaps within Socioeconomic levels
+#Note: same code as analysis 1, just with different set features in first lines
+#Set the feature you would like to compare within
+group.by <- "eco_dis"
+
+#Set the feature you are comparing
+compare.by <- "iep"
+
+# Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  res <- levels(as.factor(data[,group.by])) #All the different levels of economic disadvantage
+  
+  #Loop over tested subject
+  for(subject in subjects){
+    
+    print(paste("Grade: ",grade,", ",labels[subject])) #Print subject and grade level
+    
+    #Loop over levels of econ-dis
+    for(re in res){
+      
+      #Isolates observations from particular econ-dis level
+      data.res <- data[data[,group.by]==re,]
+      
+      #Makes comparison table for special ed enrollemnt within econ-dis level
+      a<-Summarize(data.res[,subject] ~ data.res[,compare.by]) #Makes comparison table
+      colnames(a)[1] <- labels[compare.by]
+      print(paste(labels[group.by],": ",re))
+      print(a) #Prints comparison table
+      
+    } #End loop over econ-dis level
+    
+    cat("\n\n") #spacer line
+    
+  } #End loop over tested subject
+  
+} #End loop over grade level
+```
+
+```
+[1] "Grade:  5 ,  Reading Score"
+[1] "Econ Disadvantage Status :  0"
+  Spec Ed Enrolled     n     mean       sd    min    Q1 median    Q3  max
+1                0 26166 266.4511 200.8984 -534.0 132.3  265.3 402.1 1135
+2                1  5484 264.3765 204.7574 -447.2 129.7  261.1 400.3 1017
+[1] "Econ Disadvantage Status :  1"
+  Spec Ed Enrolled     n     mean       sd    min    Q1 median    Q3    max
+1                0 14869 263.3117 201.7206 -529.7 128.8  264.2 397.6 1225.0
+2                1  3668 261.8012 199.2288 -545.4 124.7  263.0 396.3  912.3
+
+
+[1] "Grade:  5 ,  Math Score"
+[1] "Econ Disadvantage Status :  0"
+  Spec Ed Enrolled     n     mean       sd   min    Q1 median    Q3  max
+1                0 26166 617.1286 602.9950 -1866 200.6  539.6 958.8 4445
+2                1  5484 617.0771 614.1672 -1637 194.4  534.7 958.9 3762
+[1] "Econ Disadvantage Status :  1"
+  Spec Ed Enrolled     n     mean       sd   min    Q1 median    Q3  max
+1                0 14869 611.8401 597.2333 -2010 199.5  531.7 946.0 4606
+2                1  3668 611.3318 593.1283 -2679 204.7  540.6 943.1 3187
+
+
+[1] "Grade:  8 ,  Reading Score"
+[1] "Econ Disadvantage Status :  0"
+  Spec Ed Enrolled     n     mean       sd    min    Q1 median    Q3  max
+1                0 25319 313.8641 201.9544 -497.1 178.9  312.8 448.9 1159
+2                1  6971 314.8442 204.3856 -413.5 179.1  314.2 453.6 1073
+[1] "Econ Disadvantage Status :  1"
+  Spec Ed Enrolled     n     mean       sd    min    Q1 median    Q3    max
+1                0 13842 310.4723 202.1839 -495.3 177.1  310.9 447.5 1290.0
+2                1  4056 305.8840 201.4323 -497.9 168.8  306.9 440.3  987.9
+
+
+[1] "Grade:  8 ,  Math Score"
+[1] "Econ Disadvantage Status :  0"
+  Spec Ed Enrolled     n     mean       sd   min    Q1 median   Q3  max
+1                0 25319 712.7167 628.6020 -1788 269.1  626.4 1070 4655
+2                1  6971 722.3812 637.6912 -1476 277.4  634.4 1079 3987
+[1] "Econ Disadvantage Status :  1"
+  Spec Ed Enrolled     n     mean       sd   min    Q1 median   Q3  max
+1                0 13842 704.4347 616.4021 -1650 271.0  622.2 1060 4822
+2                1  4056 693.7438 614.6234 -2481 267.6  614.4 1037 4517
+```
+
+We continue with data visuals:
+
+
+```r
+# // Comparison: Box plots and histograms of scores comparing gender within race-ethnicity
+
+#Set the feature you would like to compare within
+group.by <- "race_ethnicity"
+
+#Set the feature you are comparing
+compare.by <- "male"
+
+#Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  res <- levels(as.factor(data[,group.by])) #All the different race-ethnicities we will explore
+  
+  #Loop over tested subject
+  for(subject in subjects){
+    
+    #Loop over demographic features
+    for(re in res){
+      
+        #Isolates observations from particular race-ethnicity
+        data.res <- data[data[,group.by]==re,]
+      
+        #Set variables and parameters for our boxplot
+        bp <- ggplot(data.res, aes(x=as.factor(data.res[,compare.by]), y=data.res[,subject])) + 
+              geom_boxplot() +
+              ggtitle(paste("Grade: ",grade,", ", labels[subject],", ",re)) +
+              scale_y_continuous(name=labels[subject]) +
+              scale_x_discrete(name=labels[compare.by])
+        print(bp) #Print box plot
+        
+        #Set variables and parameters for our histogram
+        h <- ggplot(data.res, aes(x=data.res[,subject], fill = as.factor(data.res[,compare.by]))) + 
+              ggtitle(paste("Grade: ",grade,", ", labels[subject],", ",re))+
+              geom_histogram(alpha = 0.5, binwidth = 50) + 
+              scale_fill_manual(name=labels[compare.by],
+                                values=colors[1:length(levels(as.factor(data.res[,compare.by])))])+
+              scale_x_continuous(name=paste(labels[subject], ", Grade", grade)) 
+        print(h) #Print histogram
+      
+    }#End loop over race-ethnicity
+    
+  } #End loop over tested subject
+  
+} #End loop over grade level
+```
+
+<img src="../figure/E_VisualizeCombos-1.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-2.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-3.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-4.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-5.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-6.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-7.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-8.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-9.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-10.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-11.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-12.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-13.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-14.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-15.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-16.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-17.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-18.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-19.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-20.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-21.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-22.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-23.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-24.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-25.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-26.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-27.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-28.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-29.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-30.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-31.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-32.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-33.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-34.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-35.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-36.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-37.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-38.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-39.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-40.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-41.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-42.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-43.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-44.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-45.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-46.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-47.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-48.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-49.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-50.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-51.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-52.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-53.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-54.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-55.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeCombos-56.png" style="display: block; margin: auto;" />
+
 **Possible Next Steps or Action Plans:** Do this for more and/or different grade levels.
