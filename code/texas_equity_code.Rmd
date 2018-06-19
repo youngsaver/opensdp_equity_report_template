@@ -316,6 +316,77 @@ for(grade in grades){
 ```
 
 
-**Analytic Technique:** Next we will extend these comparisons to different student status populations, in relatoin to special education, migrancy status, and LEP status. 
+**Analytic Technique:** Next we will extend these comparisons to different student status populations, in relation to special education, migrancy status, and LEP status. It's the same code, but now we just change our demographic indicators to the new ones we'd like to analyze (how convenient!). We start with the descriptive statistics in this first chunk, then move to visualizations in the next chunk.
+
+```{r DescriptiveStatus, echo=TRUE}
+# // Step 1: Initialize Demographics to Analyze
+#Vector with features we want to analyze: Special Education, Migrancy, and LEP Status
+##NOTE MIGRANCY DATA JUST 'NAs' SO NOT INCLUDED YET IN ANALYSIS##
+dems <- c("iep","lep")
+
+# // Comparisons: Generating summary stats for Spec Ed, Migrancy, and LEP
+#Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  #Loop over tested subject
+  for(subject in subjects){
+    
+    print(paste("Grade: ",grade,", ",labels[subject])) #Print subject and grade level
+    
+    #Loop over demographic features
+    for(dem in dems){
+      
+      a<-Summarize(data[,subject] ~ data[,dem]) #Makes comparison table
+      colnames(a)[1] <- labels[dem] #Labels comparison table
+      print(a) #Prints comparison table
+      
+    } #End loop over demogrpahic features
+    
+  } #End loop over tested subject
+  
+} #End loop over grade level
+
+```
+
+Now for visualizations:
+
+```{r VisualizeStatus, echo=TRUE}
+# // Comparison: Box plots and histograms of scores for Special Education, Migrancy, and LEP Status
+#Loop over grade levels
+for(grade in grades){
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  #Loop over tested subject
+  for(subject in subjects){
+    
+    #Loop over demographic features
+    for(dem in dems){
+      
+        #Set variables and parameters for our boxplot
+        bp <- ggplot(data, aes(x=as.factor(data[,dem]), y=data[,subject])) + 
+              geom_boxplot() +
+              ggtitle(paste("Grade: ",grade,", ", labels[subject],", by ",labels[dem])) +
+              scale_y_continuous(name=labels[subject]) +
+              scale_x_discrete(name=labels[dem])
+        print(bp) #Print box plot
+        
+        #Set variables and parameters for our histogram
+        h <- ggplot(data, aes(x=data[,subject], fill = as.factor(data[,dem]))) + 
+              ggtitle(paste("Grade: ",grade,", ", labels[subject],", by ",labels[dem]))+
+              geom_histogram(alpha = 0.5, binwidth = 50) + 
+              scale_fill_manual(name=labels[dem],
+                                values=colors[1:length(levels(as.factor(data[,dem])))])+
+              scale_x_continuous(name=paste(labels[subject], ", Grade", grade)) 
+        print(h) #Print histogram
+      
+    }#End loop over demographic features
+    
+  } #End loop over tested subject
+  
+} #End loop over grade level
+```
 
 **Possible Next Steps or Action Plans:** Do this for more and/or different grade levels.
