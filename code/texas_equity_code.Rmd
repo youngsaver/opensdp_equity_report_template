@@ -153,7 +153,7 @@ This guide is an open-source document hosted on Github and generated using R Mar
 
 ## Analyses
 
-### Descriptive Statistics
+### Exploratory Analysis
 
 **Purpose:** Descriptive statistics give your agency a quick snapshot of current achievement gaps among students, identifying areas for further investigation and analysis.
 
@@ -237,6 +237,7 @@ for(grade in grades){
     print(p) 
     
   } #End loop over tested subject
+  
 } #End loop over grade level
 ```
 
@@ -546,4 +547,35 @@ for(grade in grades){
 } #End loop over grade level
 ```
 
-**Possible Next Steps or Action Plans:** Do this for more and/or different grade levels.
+### Comparing gaps at schools
+
+**Purpose:** When you already have a sense of where the gaps exist throughout the district, it can be useful to pinpoint at which schools the gap is most exaggerated and at which schools the gap is most narrow. Identifying these schools can lead to further analyses to investigate why these variations exists, possibly informing school and district policy. 
+
+**Required Analysis File Variables:**
+
+- `grade_level` 
+- `school_code` 
+- `male`        
+- `race_ethnicity` 
+- `eco_dis`      
+- `title_1`     
+- `migrant`     
+- `lep`
+- `iep`
+- `rdg_ss`
+- `math_ss`
+- `wrtg_ss`
+- `composition`
+
+**Ask Yourself**
+
+- Where are the gaps most exaggerated? Where are the gaps narrowest?
+- What further analyses could we do to investigate the reasons behind gap variation at different schools?
+
+**Analytic Technique:** We will be calculating achievement gaps using median scores on state tests for our subpopulations. We have decided to use medians, rather than means, because the distributions for our test scores (as shown in the histograms above) tend to be skewed left or right. With such skew, means can often be inflated or deflated due to outliers. Medians, which are less sensitive to skew, are often more effective measures of central tendency in such cases. 
+
+We will quantify the gaps according to the state-wide standard deviation for the year, test, and grade level in which the gap exists. Here is a table showing the distribution info (including standard deviation) for all the tests from 2014 (all state education agencies should report something like this):
+
+<img src="../img/staar_2014_dist.png" style="display: block; margin: 0 auto; height: 350px;">
+
+
