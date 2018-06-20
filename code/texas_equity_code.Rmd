@@ -578,4 +578,89 @@ We will quantify the gaps according to the state-wide standard deviation for the
 
 <img src="../img/staar_2014_dist.png" style="display: block; margin: 0 auto; height: 350px;">
 
+Since we found above that the gender gap in math and the LEP status gap in reading were the widest gaps district-wide, we will focus on quantifying those gaps within the schools.
 
+```{r SchoolGaps, echo=TRUE}
+# // Step 1: Initialize table of scale score standard deviations for our tests
+#Import csv file I made with standard deviations in scale scores for all exams
+sd.table <- read.csv("../data/sd_table.csv")
+View(sd.table)
+
+#Index table rows by grade level
+rownames(sd.table) <- sd.table$grade
+View(sd.table)
+
+# // Step 2: Create lists of demographic markers and their grade/subject gaps to measure
+#Initialize demographic markers where you want to measure gaps
+dems <- c("male","lep")
+
+#Create lists of grade/subject/subpop combos where want to test for gaps
+#For each demographic marker
+dem.male <- list( test1 = c(grade = 5, subject = "math_ss", group = c("Female","Male")),
+                  test2 = c(grade = 8, subject = "math_ss", group = c("Female","Male")))
+dem.lep  <- list( test1 = c(grade = 5, subject = "rdg_ss", group = c(0,1)),
+                  test2 = c(grade = 8, subject = "rdg_ss", group = c(0,1)))
+
+#Combine lists by demographic marker
+test.lists <- list(male = dem.male, lep = dem.lep)
+
+# // Step 3: Measure and sort median differences by school
+#Loop over demographic marker
+for(dem in dems){
+  
+  #Saves grade/subject lists for demographic marker
+  tests <- test.lists[[dem]]
+  
+  #Loop over grade/subject/subpopulation combos
+  for(test in tests){
+    
+    #Save grade, subject, and subpopulations
+    grade <- test["grade"][[1]]
+    subject <- test["subject"][[1]]
+    group1 <- test["group1"][[1]]
+    group2 <- test["group2"][[1]]
+    
+    data <- texas.data[texas.data$grade_level == grade,] #Isolates grade level
+    data <- data[data[,dem]== group1 | data[,dem]== group2, ] #Isolates subpopulations
+    
+    #Finds overall district scaled median difference
+    dis.meds <- tapply(data$math_ss, data[,dem], median, na.rm=TRUE)
+    dis.diff <- (dis.meds[group2] - dis.meds[group1])/sd.table[grade,subject]
+    names(dis.diff) <- c("district")
+    
+    #Finds medians by school and demographic marker
+    school.meds <- tapply(data$math_ss, 
+                          list(data$school_code, data[,dem]), 
+                          median, na.rm=TRUE)
+    
+    #Finds gaps and scales by standard deviation
+    differences <- (school.meds[,group2] - school.meds[,group1])/sd.table[grade,subject]
+    differences <- c(differences, dis.diff) #include district-wide difference
+    
+    #Sorts the gaps (smallest to largest), converts to dataframe, appends distrist median difference
+    differences <- differences[order(differences)]
+    med_diff_table <- data.frame(school_code = names(differences),
+                                   median_diff = differences)
+    rownames(med_diff_table) <- NULL
+    
+    #Prints table of differences
+    print(paste(labels[dem], ", difference of medians: ", 
+                group2, " - ",group1))
+    print(paste("Grade: ",grade,", ",labels[subject]))
+    print(med_diff_table)
+    cat("\n\n")
+    
+    #Shows barplot of school median differences
+    barp <- ggplot(med_diff_table, aes(x= reorder(school_code, median_diff), y=median_diff)) +
+                  geom_bar(stat="identity")+
+                  scale_x_discrete(name = "School Code")+
+                  scale_y_continuous(name = "Scaled Median Difference")+
+                  ggtitle(paste("Median Differences ", labels[dem],"(",group2, "-",group1,")"))
+    
+    print(barp)
+    
+  } # End loop over grade/subject/subpopulation combos
+
+} # End loop over demographic markers
+
+```
