@@ -624,12 +624,12 @@ for(dem in dems){
     data <- data[data[,dem]== group1 | data[,dem]== group2, ] #Isolates subpopulations
     
     #Finds overall district scaled median difference
-    dis.meds <- tapply(data$math_ss, data[,dem], median, na.rm=TRUE)
+    dis.meds <- tapply(data[,subject], data[,dem], median, na.rm=TRUE)
     dis.diff <- (dis.meds[group2] - dis.meds[group1])/sd.table[grade,subject]
     names(dis.diff) <- c("district")
     
     #Finds medians by school and demographic marker
-    school.meds <- tapply(data$math_ss, 
+    school.meds <- tapply(data[,subject], 
                           list(data$school_code, data[,dem]), 
                           median, na.rm=TRUE)
     
@@ -652,15 +652,208 @@ for(dem in dems){
     
     #Shows barplot of school median differences
     barp <- ggplot(med_diff_table, aes(x= reorder(school_code, median_diff), y=median_diff)) +
-                  geom_bar(stat="identity")+
+                  geom_bar(position="dodge",stat="identity")+
                   scale_x_discrete(name = "School Code")+
                   scale_y_continuous(name = "Scaled Median Difference")+
-                  ggtitle(paste("Median Differences ", labels[dem],"(",group2, "-",group1,")"))
+                  ggtitle(paste("Grade",grade,labels[subject], 
+                                "Median Differences ", labels[dem],
+                                "(",group2, "-",group1,")"))
     
     print(barp)
     
   } # End loop over grade/subject/subpopulation combos
 
 } # End loop over demographic markers
+
+```
+
+### Identifying Target Schools
+
+**Purpose:** As a district leader or policymaker, the next step is to identify which campuses have the most underperforming students for the student populations in which we see the largest gaps district-wide. Those schools would be the ones to target with direct or indirect interventions, in order to fastest close the gap for the district overall.
+
+**Required Analysis File Variables:**
+
+- `grade_level` 
+- `school_code` 
+- `male`        
+- `race_ethnicity` 
+- `eco_dis`      
+- `title_1`     
+- `migrant`     
+- `lep`
+- `iep`
+- `rdg_ss`
+- `math_ss`
+- `wrtg_ss`
+- `composition`
+
+**Ask Yourself**
+
+- Which is more important in this analysis: identifying the school with the lowest median scores for a student population or identifying the campuses with the largest number of students (of our target population) performing below a certain benchmark?
+- What types of interventions would be most useful for our target schools?
+
+**Analytic Technique:** To get a sense of where students from our target student populations are performing the worst overall, we will calculate the median reading test scores at each campus among LEP students and median math test scores at each campus among female students. Again, we choose the medians here because they are less susceptible to skew and outliers.
+
+```{r MedianTargets, echo=TRUE}
+# // Step 1: Initialize target populations, grade, and subject
+#Initialize demographic markers where you want to measure gaps
+dems <- c("male","lep")
+
+#Create lists of grade/subject/subpop combos where want to measure medians
+#For each demographic marker
+dem.male <- list( test1 = c(grade = 5, subject = "math_ss", group = "Female"),
+                  test2 = c(grade = 8, subject = "math_ss", group = "Female"))
+dem.lep  <- list( test1 = c(grade = 5, subject = "rdg_ss", group = 1),
+                  test2 = c(grade = 8, subject = "rdg_ss", group = 1))
+
+#Combine lists by demographic marker
+test.lists <- list(male = dem.male, lep = dem.lep)
+
+# // Step 2: Measure and sort medians by school
+#Loop over demographic marker
+for(dem in dems){
+  
+  #Saves grade/subject lists for demographic marker
+  tests <- test.lists[[dem]]
+  
+  #Loop over grade/subject/subpopulation combos
+  for(test in tests){
+    
+    #Save grade, subject, and subpopulations
+    grade <- test["grade"][[1]]
+    subject <- test["subject"][[1]]
+    group <- test["group"][[1]]
+    
+    data <- texas.data[texas.data$grade_level == grade,] #Isolates grade level
+    data <- data[data[,dem]== group, ] #Isolates subpopulation
+    
+    #Finds overall district median
+    dis.med <- median(data[,subject])
+    names(dis.med) <- c("district")
+    
+    #Finds medians by school and demographic marker
+    school.meds <- tapply(data[,subject], 
+                          data$school_code, 
+                          median, na.rm=TRUE)
+    school.meds <- c(school.meds, dis.med) #include district-wide median
+    
+    #Sorts the medians (smallest to largest), converts to dataframe
+    school.meds <- school.meds[order(school.meds)]
+    med_table <- data.frame(school_code = names(school.meds),
+                                   median = school.meds)
+    rownames(med_table) <- NULL
+    
+    #Prints table of medians
+    print(paste(labels[dem], group, " Medians"))
+    print(paste("Grade: ",grade,", ",labels[subject]))
+    print(med_table)
+    cat("\n\n")
+    
+    #Shows barplot of school medians
+    barp <- ggplot(med_table, aes(x= reorder(school_code, median), y=median)) +
+                  geom_bar(stat="identity")+
+                  geom_text(aes(label=round(median)), vjust=-0.25)+
+                  scale_x_discrete(name = "School Code")+
+                  scale_y_continuous(name = "Median Score")+
+                  ggtitle(paste("Grade",grade,labels[subject], 
+                                "Medians for", labels[dem],group,
+                                ", by School"))
+    
+    print(barp)
+    
+  } # End loop over grade/subject/subpopulation combos
+
+} # End loop over demographic markers
+
+```
+
+Let's try to further visualize the score distributions of the lower 3 performing schools by making box plots comparing them with one another and the district average.
+
+```{r BoxPlotTargets, echo=TRUE}
+
+
+```
+
+**Analytic Technique:** Although useful for getting an overall picture, looking at medians alone may not be the most effective way to identify target schools. Given that districts have limited resources, it may also be useful to take school size into account. For example, a small school may have the worst median LEP performance in your district. However, it could be more efficient to target a larger school with slightly higher median performance scores if that school has more low-performing LEP students overall. At the larger school, in theory, a new intervention effort could reach a greater number of lower-performing LEP students than at the smaller school. Of course, if this technique is used in isolation, it has the potential downside of consistently preferencing resources towards larger schools. The result could be perceived favoritism or discrimination. Therefore, this analysis should provide just one among several considerations when picking target schools.
+
+In this analysis, we will attempt to isolate the raw number of students at each school in our target populations who are "under-performing". We will do this in two ways: 
+1) We will look at the number of target students in each campus who scored below the district-wide median.
+2) We will look at the number of target students at each campus who scored below the district-wide first quartile.
+
+```{r RawNumberTargets, echo=TRUE}
+## // Step 1: Initialize target populations, grade, and subject
+##Initialize demographic markers where you want to measure gaps
+#dems <- c("male","lep")
+#
+##Create lists of target grade/subject/subpop combos
+##For each demographic marker
+#dem.male <- list( test1 = c(grade = 5, subject = "math_ss", group = "Female"),
+#                  test2 = c(grade = 8, subject = "math_ss", group = "Female"))
+#dem.lep  <- list( test1 = c(grade = 5, subject = "rdg_ss", group = 1),
+#                  test2 = c(grade = 8, subject = "rdg_ss", group = 1))
+#
+##Combine lists by demographic marker
+#test.lists <- list(male = dem.male, lep = dem.lep)
+#
+## // Step 2: Measure and sort medians by school
+##Loop over demographic marker
+#for(dem in dems){
+#  
+#  #Saves grade/subject lists for demographic marker
+#  tests <- test.lists[[dem]]
+#  
+#  #Loop over grade/subject/subpopulation combos
+#  for(test in tests){
+#    
+#    #Save grade, subject, and subpopulations
+#    grade <- test["grade"][[1]]
+#    subject <- test["subject"][[1]]
+#    group <- test["group"][[1]]
+#    
+#    data <- texas.data[texas.data$grade_level == grade,] #Isolates grade level
+#    
+#    #Calculates district median and first quartile scores for test
+#    dist.median <- median(data[,subject]) #district median
+#    dist.quant <- quantile(data[,subject])[["25%"]] #district first quartile
+#    
+#    data <- data[data[,dem]== group, ] #Isolates subpopulation
+#    
+#    #Finds overall district median
+#    dis.med <- median(data[,subject])
+#    names(dis.med) <- c("district")
+#    
+#    #Finds medians by school and demographic marker
+#    school.meds <- tapply(data[,subject], 
+#                          data$school_code, 
+#                          median, na.rm=TRUE)
+#    school.meds <- c(school.meds, dis.med) #include district-wide median
+#    
+#    #Sorts the medians (smallest to largest), converts to dataframe
+#    school.meds <- school.meds[order(school.meds)]
+#    med_table <- data.frame(school_code = names(school.meds),
+#                                   median = school.meds)
+#    rownames(med_table) <- NULL
+#    
+#    #Prints table of medians
+#    print(paste(labels[dem], group, " Medians"))
+#    print(paste("Grade: ",grade,", ",labels[subject]))
+#    print(med_table)
+#    cat("\n\n")
+#    
+#    #Shows barplot of school medians
+#    barp <- ggplot(med_table, aes(x= reorder(school_code, median), y=median)) +
+#                  geom_bar(stat="identity")+
+#                  geom_text(aes(label=round(median)), vjust=-0.25)+
+#                  scale_x_discrete(name = "School Code")+
+#                  scale_y_continuous(name = "Median Score")+
+#                  ggtitle(paste("Grade",grade,labels[subject], 
+#                                "Medians for", labels[dem],group,
+#                                ", by School"))
+#    
+#    print(barp)
+#    
+#  } # End loop over grade/subject/subpopulation combos
+#
+#} # End loop over demographic markers
 
 ```
