@@ -874,3 +874,113 @@ for(dem in dems){
 } # End loop over demographic markers
 
 ```
+
+### Isolating effects of covariates
+
+**Purpose:** Students possess many individual and demographic features that simultaneously affect their education. It can be hard to determine, from an equity perspective, what factor most affects a student's ability to learn and achieve. 
+
+For example, in the data, you may notice undocumented students generally score lower on reading tests. One could draw the conclusion from this trend that there exist direct barriers to achievement for undocumented students that the district or state must tackle. 
+
+However, many undocumented students may be Limited English Proficient (LEP) learners. In many cases, LEP students in general also have lower reading scores, due to language barriers. So can the correlation between immigration status and lower scores be mostly explained by such language barriers? Or does the noticeable score effect from immigration status remain, even when we control for English proficiency level? Testing out this nuance, and others like it, can help a district hone its efforts and create better policy for under-performing student populations.
+
+**Required Analysis File Variables:**
+
+- `grade_level` 
+- `school_code` 
+- `male`        
+- `race_ethnicity` 
+- `eco_dis`      
+- `title_1`     
+- `migrant`     
+- `lep`
+- `iep`
+- `rdg_ss`
+- `math_ss`
+- `wrtg_ss`
+- `composition`
+
+**Ask Yourself**
+
+- Can we draw causal estimates from this type of analysis, or is it only correlatoinal?
+- How do we best choose what controls we use in our equations?
+
+**Analytic Technique:** We will be using using linear regression. We choose linear regression because our outcome variable (scale scores on tests) is approximately continuous, and the technique will allow us to come up with our correlatoin estimates while controlling for various factors. Here, we will look at Black/White and Hispanic/White achievement gaps in 8th grade math, when controlling for economic disadvantage level and LEP level.
+
+```{r CoefficientAnalysis, echo=TRUE}
+# // Step 1: Isolate the grade level we want (8th grade here)
+data <- texas.data[texas.data$grade_level == 8,]
+
+# // Step 2: Recode variables and create cluster variable
+data$race_ethnicity <- as.factor(data$race_ethnicity)
+data$race_ethnicity <- relevel(data$race_ethnicity, ref = "White")
+
+# // Step 3: Create a unique identifier for clustering standard errors 
+# at the school level
+data$cluster_var <- data$school_code 
+
+# Load the broom library to make working with model coefficients simple 
+# and uniform
+library(broom)
+
+# // Step 4: Estimate the unadjusted and adjusted differences in 8th grade math  
+# scores between Hispanic and white students and between black and white 
+# students 
+
+# Estimate unadjusted enrollment gap
+#  Fit the model
+mod1 <- lm(math_ss ~ race_ethnicity, data = data)
+#  Extract the coefficients
+betas_unadj <- tidy(mod1)
+#  Get the clustered variance-covariance matrix
+#  Use the get_CL_vcov function from the functions.R script
+clusterSE <- get_CL_vcov(mod1, data$cluster_var)
+#  Get the clustered standard errors and combine with the betas
+betas_unadj$std.error <- sqrt(diag(clusterSE))
+betas_unadj <- betas_unadj[, 1:3]
+#  Label
+betas_unadj$model <- "Unadjusted enrollment gap"
+
+# Estimate score gap adjusting for economic disadvantage level
+mod2 <- lm(math_ss ~ race_ethnicity + eco_dis, data = data)
+betas_adj_eco_dis <- tidy(mod2)
+clusterSE <- get_CL_vcov(mod2, data$cluster_var)
+betas_adj_eco_dis$std.error <- sqrt(diag(clusterSE))
+betas_adj_eco_dis <- betas_adj_eco_dis[, 1:3]
+betas_adj_eco_dis$model <- "Gap adjusted for econ disadvantage"
+
+# Estimate score gap adjusting for LEP status
+mod3 <- lm(math_ss ~ race_ethnicity + lep, data = data)
+betas_adj_lep <- tidy(mod3)
+clusterSE <- get_CL_vcov(mod3, data$cluster_var)
+betas_adj_lep$std.error <- sqrt(diag(clusterSE))
+betas_adj_lep <- betas_adj_lep[, 1:3]
+betas_adj_lep$model <- "Gap adjusted for LEP status"
+
+# Estimate score gap adjusting for economic disadvantage level and LEP status
+mod4 <- lm(math_ss ~ race_ethnicity + eco_dis + lep, 
+           data = data)
+betas_adj_ecodis_lep <- tidy(mod4)
+clusterSE <- get_CL_vcov(mod4, data$cluster_var)
+betas_adj_ecodis_lep$std.error <- sqrt(diag(clusterSE))
+betas_adj_ecodis_lep <- betas_adj_ecodis_lep[, 1:3]
+betas_adj_ecodis_lep$model <- "Gap adjusted for Eco_Dis level & LEP status"
+
+# // Step 5. Transform the regression coefficients to a data object for plotting
+chartData <- bind_rows(betas_unadj, betas_adj_eco_dis, betas_adj_lep, 
+                    betas_adj_ecodis_lep)
+
+# // Step 6. Plot
+ggplot(chartData[chartData$term == "race_ethnicityHispanic or Latino Ethnicity", ],
+       aes(x = model, y = -estimate, fill = model)) + 
+        geom_bar(stat = 'identity', color = I("black")) + 
+        scale_fill_brewer(type = "seq", palette = 8) +
+        geom_hline(yintercept = 0) + 
+        guides(fill = guide_legend("", keywidth = 6, nrow = 2)) + 
+        geom_text(aes(label = -estimate, vjust = -0.3)) +
+        scale_y_continuous(name = "Scale Score") + 
+        theme_classic() + theme(legend.position = "bottom", axis.text.x = element_blank(), 
+                                axis.ticks.x = element_blank()) + 
+        labs(title = "Differences in 8th Grade Math Scores Between Latino and White Students", 
+             x = "")
+
+```
