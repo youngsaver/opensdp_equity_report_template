@@ -794,77 +794,83 @@ In this analysis, we will attempt to isolate the raw number of students at each 
 ```{r RawNumberTargets, echo=TRUE}
 ## // Step 1: Initialize target populations, grade, and subject
 ##Initialize demographic markers where you want to measure gaps
-#dems <- c("male","lep")
+dems <- c("male","lep")
 #
 ##Create lists of target grade/subject/subpop combos
 ##For each demographic marker
-#dem.male <- list( test1 = c(grade = 5, subject = "math_ss", group = "Female"),
-#                  test2 = c(grade = 8, subject = "math_ss", group = "Female"))
-#dem.lep  <- list( test1 = c(grade = 5, subject = "rdg_ss", group = 1),
-#                  test2 = c(grade = 8, subject = "rdg_ss", group = 1))
-#
+dem.male <- list( test1 = c(grade = 5, subject = "math_ss", group = "Female"),
+                  test2 = c(grade = 8, subject = "math_ss", group = "Female"))
+dem.lep  <- list( test1 = c(grade = 5, subject = "rdg_ss", group = 1),
+                  test2 = c(grade = 8, subject = "rdg_ss", group = 1))
+
 ##Combine lists by demographic marker
-#test.lists <- list(male = dem.male, lep = dem.lep)
+test.lists <- list(male = dem.male, lep = dem.lep)
 #
-## // Step 2: Measure and sort medians by school
+## // Step 2: Measure and visualize number of underperforming students by school
 ##Loop over demographic marker
-#for(dem in dems){
-#  
-#  #Saves grade/subject lists for demographic marker
-#  tests <- test.lists[[dem]]
-#  
-#  #Loop over grade/subject/subpopulation combos
-#  for(test in tests){
-#    
-#    #Save grade, subject, and subpopulations
-#    grade <- test["grade"][[1]]
-#    subject <- test["subject"][[1]]
-#    group <- test["group"][[1]]
-#    
-#    data <- texas.data[texas.data$grade_level == grade,] #Isolates grade level
-#    
-#    #Calculates district median and first quartile scores for test
-#    dist.median <- median(data[,subject]) #district median
-#    dist.quant <- quantile(data[,subject])[["25%"]] #district first quartile
-#    
-#    data <- data[data[,dem]== group, ] #Isolates subpopulation
-#    
-#    #Finds overall district median
-#    dis.med <- median(data[,subject])
-#    names(dis.med) <- c("district")
-#    
-#    #Finds medians by school and demographic marker
-#    school.meds <- tapply(data[,subject], 
-#                          data$school_code, 
-#                          median, na.rm=TRUE)
-#    school.meds <- c(school.meds, dis.med) #include district-wide median
-#    
-#    #Sorts the medians (smallest to largest), converts to dataframe
-#    school.meds <- school.meds[order(school.meds)]
-#    med_table <- data.frame(school_code = names(school.meds),
-#                                   median = school.meds)
-#    rownames(med_table) <- NULL
-#    
-#    #Prints table of medians
-#    print(paste(labels[dem], group, " Medians"))
-#    print(paste("Grade: ",grade,", ",labels[subject]))
-#    print(med_table)
-#    cat("\n\n")
-#    
-#    #Shows barplot of school medians
-#    barp <- ggplot(med_table, aes(x= reorder(school_code, median), y=median)) +
-#                  geom_bar(stat="identity")+
-#                  geom_text(aes(label=round(median)), vjust=-0.25)+
-#                  scale_x_discrete(name = "School Code")+
-#                  scale_y_continuous(name = "Median Score")+
-#                  ggtitle(paste("Grade",grade,labels[subject], 
-#                                "Medians for", labels[dem],group,
-#                                ", by School"))
-#    
-#    print(barp)
-#    
-#  } # End loop over grade/subject/subpopulation combos
-#
-#} # End loop over demographic markers
+for(dem in dems){
+  
+  #Saves grade/subject lists for demographic marker
+  tests <- test.lists[[dem]]
+  
+  #Loop over grade/subject/subpopulation combos
+  for(test in tests){
+    
+    #Save grade, subject, and subpopulations
+    grade <- test["grade"][[1]]
+    subject <- test["subject"][[1]]
+    group <- test["group"][[1]]
+    
+    data <- texas.data[texas.data$grade_level == grade,] #Isolates grade level
+    
+    #Calculates district median and first quartile scores for test
+    dist.median <- median(data[,subject]) #district median
+    dist.quant <- quantile(data[,subject])[["25%"]] #district first quartile
+    
+    data <- data[data[,dem]== group, ] #Isolates subpopulation
+    data$below_med <- data[,subject] < dist.median #Adds indicator if below median
+    data$below_quant <- data[,subject] < dist.quant #Adds indicator if below first quartile
+    
+    #Initialize vectors for a loop to get numbers below median and quartile and plot them
+    cuts <- c("below_med","below_quant")
+    cut.labels <- c("Below Median","Below First Quartile")
+    names(cut.labels) <- cuts
+    
+    #Loop over median and quartile analysis
+    for(cut in cuts){
+      
+      #Finds number of students at each school below cut
+      school.data <- tapply(data[,cut], 
+                          data$school_code, 
+                          sum, na.rm=TRUE)
+      school.data <- school.data[order(school.data, decreasing=TRUE)] #sort descending order
+      school_table <- data.frame(school_code = names(school.data), #make into table
+                                     count = school.data)
+      rownames(school_table) <- NULL 
+      
+      #Prints table of counts for each school
+      print(paste(labels[dem], group,",", cut.labels[cut]))
+      print(paste("Grade: ",grade,", ",labels[subject]))
+      print(school_table)
+      cat("\n\n")
+      
+      #Shows barplot of number below cut by school
+      barp <- ggplot(school_table, aes(x= reorder(school_code, -count), y=count)) +
+                  geom_bar(stat="identity")+
+                  geom_text(aes(label=count, vjust=-0.25))+
+                  scale_x_discrete(name = "School Code")+
+                  scale_y_continuous(name = paste("Number of students",cut.labels[cut]))+
+                  ggtitle(paste("Grade",grade,labels[subject], 
+                                "Number of", labels[dem],group,
+                                "Students",cut.labels[cut],
+                                ", by School"))
+    
+      print(barp)
+      
+    } #End loop over cuts
+    
+  } # End loop over grade/subject/subpopulation combos
+
+} # End loop over demographic markers
 
 ```
