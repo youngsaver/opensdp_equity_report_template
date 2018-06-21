@@ -692,7 +692,7 @@ for(dem in dems){
 - Which is more important in this analysis: identifying the school with the lowest median scores for a student population or identifying the campuses with the largest number of students (of our target population) performing below a certain benchmark?
 - What types of interventions would be most useful for our target schools?
 
-**Analytic Technique:** To get a sense of where students from our target student populations are performing the worst overall, we will calculate the median reading test scores at each campus among LEP students and median math test scores at each campus among female students. Again, we choose the medians here because they are less susceptible to skew and outliers.
+**Analytic Technique:** To get a sense of where students from our target student populations are performing the worst overall, we will calculate the median reading test scores at each campus among LEP students and median math test scores at each campus among female students. Again, we choose the medians here because they are less susceptible to skew and outliers. We will visualize these medians with bar charts, and we will visualize the lowest peforming schools with comparative box plots.
 
 ```{r MedianTargets, echo=TRUE}
 # // Step 1: Initialize target populations, grade, and subject
@@ -761,18 +761,29 @@ for(dem in dems){
     
     print(barp)
     
+    #Isolate data for lowest 3 schools
+    low.schools <- as.character(med_table[1:3,"school_code"])
+    data$school_code <- as.character(data$school_code)
+    data.low <- data[data$school_code== low.schools, ]
+    data.low$school_code <- factor(data.low$school_code, 
+                                   levels = low.schools,ordered=TRUE)
+    
+    #Show box plots of 3 lowest schools and district overall
+    boxp <- ggplot(data.low, aes(x=school_code , y=data.low[,subject])) +
+                  geom_boxplot() +
+                  geom_boxplot(data=data, aes(x = factor("district"), y = data[,subject]))+
+                  scale_x_discrete(limits=c(low.schools,"district"),
+                                   name="School Code")+
+                  scale_y_continuous(name=labels[subject])+
+                  ggtitle(paste("Lowest schools",labels[dem],group,",Grade",grade,labels[subject]))
+    print(boxp)
+    
   } # End loop over grade/subject/subpopulation combos
 
 } # End loop over demographic markers
 
 ```
 
-Let's try to further visualize the score distributions of the lower 3 performing schools by making box plots comparing them with one another and the district average.
-
-```{r BoxPlotTargets, echo=TRUE}
-
-
-```
 
 **Analytic Technique:** Although useful for getting an overall picture, looking at medians alone may not be the most effective way to identify target schools. Given that districts have limited resources, it may also be useful to take school size into account. For example, a small school may have the worst median LEP performance in your district. However, it could be more efficient to target a larger school with slightly higher median performance scores if that school has more low-performing LEP students overall. At the larger school, in theory, a new intervention effort could reach a greater number of lower-performing LEP students than at the smaller school. Of course, if this technique is used in isolation, it has the potential downside of consistently preferencing resources towards larger schools. The result could be perceived favoritism or discrimination. Therefore, this analysis should provide just one among several considerations when picking target schools.
 
