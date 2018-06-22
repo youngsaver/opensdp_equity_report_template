@@ -1,6 +1,88 @@
 # Packages
 library(tidyverse)
 
+###Explores dataset to find widest achievement gaps
+##Outputs list of 40 largest achievement gaps (computd by standardized mean difference)
+#data = dataset to explore, should be wide format and have column for grade level (class: data frame)
+#grade = name of tested grade column in datasets (class: character)
+#outcome = name of outcome variable (usually test scores) in datasets (class: character)
+#features = vector of features in dataset where testing for gaps (class: character)
+#sds = dataframe containing the standard deviations for all test (class: data frame)
+##Begin function
+gap.test <- function(df, grade, outcome, features, sds) {
+  
+  #Convert features to factors
+  df[,features] <- lapply(df[,features], as.character)
+  df[,features] <- lapply(df[,features], as.factor)
+  df[,features]
+  
+  #Get all grade levels for the chosen tested subject
+  grades <- sds[!is.na(sds[,outcome]),grade]
+  
+  #Will store all calculated achievement gaps
+  gaps <- vector()
+  
+  #Loop over grade levels
+  for(gr in grades){
+    
+    #Break down data by grade
+    dat.grade <- df[df[,grade]==gr,]
+    
+    #Get standard deviation for scale scores at that grade level
+    sd <- standard.devs[standard.devs[,grade]==gr,outcome]
+    
+    #Loop over features
+    for(feature in features){
+      
+      #Get levels of feature
+      lvl <- levels(dat.grade[,feature])
+      
+      #Get matrix of all combos of levels
+      com.lvl <- combn(lvl,2)
+      
+      #Loop over combinations
+      for(i in 1:dim(com.lvl)[2]){
+        
+        #Get levels you will compare gaps for
+        level1 <- com.lvl[1,i]
+        level2 <- com.lvl[2,i]
+        
+        #Measure gap (in terms of standardized median difference)
+        level1.data <- dat.grade[dat.grade[,feature]==level1,outcome]
+        level2.data <- dat.grade[dat.grade[,feature]==level2,outcome]
+        gap <- (median(level1.data) - median(level2.data))/sd
+        
+        #Append gap to list and name in
+        gaps <- append(gaps,gap,length(gaps))
+        names(gaps)[length(gaps)] <- paste(level1,"-",level2,feature,gr,outcome)
+        
+        
+      } #End loop over combinations
+      
+    } #End loop over features
+    
+  } #End loop over grade levels
+  
+  #Sort gaps largest to smallest in magnitude
+  sorted <- gaps[order(abs(gaps), decreasing=TRUE)]
+  
+  #Prints 40 largest gaps
+  print(sorted[1:40])
+  
+}#End function
+
+#Download data to test function with and standard deviations
+texas.data<-read.csv("../data/synth_texas.csv")
+standard.devs <- read.csv("../data/sd_table.csv")
+
+#Function test
+gap.test(df=texas.data,
+         grade="grade_level",
+         outcome="rdg_ss",
+         features=c('eco_dis','lep','iep','race_ethnicity','male'),
+         sds=standard.devs)
+
+
 # R Function for Task 1
 # Derive the mode in a stata friendly fashion
 statamode <- function(x) {
