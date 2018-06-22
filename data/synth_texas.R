@@ -27,7 +27,7 @@
 ## This step is optional if you already have it installed
 ## Current package depends on this fork of the simglm package
 ## Uncomment to use
-devtools::install_github("jknowles/simglm")
+#devtools::install_github("jknowles/simglm")
 ## Install the OpenSDP data synthesizer
 ## Uncomment to use
 # devtools::install_github("OpenSDP/OpenSDPsynthR")
@@ -36,7 +36,8 @@ devtools::install_github("jknowles/simglm")
 
 library(OpenSDPsynthR)
 set.seed(0525212) # set the seed
-
+library(magrittr)
+library(stringr)
 # The synthesizer needs some input paramaters
 # As it is the defaults are not sufficient to give realistic assessment data
 # These change those defaults to make the scores less deterministic
@@ -66,7 +67,7 @@ assess_sim_par$random_param$random_var <- c(0.4, 0.75)
 assess_sim_par$unbalanceRange <- c(100, 420)
 
 # Conduct the simulation
-stu_pop <- simpop(50000L, seed = 0525212, 
+stu_pop <- simpop(5000L, seed = 0525212, 
                   control = sim_control(nschls = 12L, n_cohorts = 4L, 
                                         assessment_adjustment = assess_adj,
                                         assess_sim_par = assess_sim_par))
@@ -107,16 +108,94 @@ out_data$title_1 <- NA
 
 # Define an export
 export <- out_data %>% 
-  select(grade, schid, sid, Sex, Race, frpl, title_1, migrant, ell, iep, rdg_ss, math_ss, 
-         wrtg_ss, composition)
+  select(sid, schid, grade, year, Sex, Race, frpl, title_1, 
+         migrant, ell, iep, rdg_ss, math_ss, wrtg_ss, composition)
 
+## Reshape Assessment scores to map to TASS
+assess_distr <- read.csv("man/texas_score_distributions.csv", 
+                         stringsAsFactors = FALSE)
+
+
+match_distr <- function(source, target){
+  # source is a numeric vector that can be converted to percentiles
+  # target is the assess_distr data from Texas above that can be 
+  # subset by subject and grade
+  out <- ntile(source, n = 100) # generate percentiles
+  mod1 <- loess(scale_score ~ perc, data = target) # map percentiles to scores
+  newdata <- data.frame("perc" = out) # use the new data to make predictions
+  yhat <- predict(mod1, newdata = newdata) # predict from the loess model
+  min_score <- min(target$scale_score) # find LOSS
+  max_score <- max(target$scale_score) # find HOSS
+  yhat[yhat > max_score] <- max_score # truncate
+  yhat[yhat < min_score] <- min_score
+  return(yhat)
+}
+
+###################################################################
+# Uncomment code to step through the match_distr function above
+####################################################################
+# plotdf <- assess_distr[assess_distr$grade == 3 & 
+#                          assess_distr$subject == "math", ]
+# ggplot(plotdf, aes(x = scale_score, y = cum_perc)) + 
+#   geom_bar(stat="identity", fill = "white", color = "black") + theme_bw() + 
+#   geom_smooth()
+# mod1 <- loess(scale_score ~ perc, data = plotdf)
+# source <- stu_pop$stu_assess %>% filter(grade == 3) %>% ungroup %>%
+#   select(math_ss) %>% pull
+# zz <- match_distr(source = source, target = plotdf)
+
+for(j in c("math", "rdg")){
+  for(i in c(3:8)){
+    if(j == "math"){
+      export$math_ss[out_data$grade == i] <- 
+        match_distr(source = out_data$math_ss[export$grade == i], 
+                    target = assess_distr[assess_distr$subject == j & 
+                                            assess_distr$grade == i,])
+    } else if (j == "rdg"){
+      export$rdg_ss[out_data$grade == i] <- 
+        match_distr(source = out_data$math_ss[export$grade == i], 
+                    target = assess_distr[assess_distr$subject == j & 
+                                            assess_distr$grade == i,])
+    } else if (j == "wrtg"){
+      export$wrtg_ss[out_data$grade == i] <- 
+        match_distr(source = out_data$math_ss[export$grade == i], 
+                    target = assess_distr[assess_distr$subject == j & 
+                                            assess_distr$grade == i,])
+    }
+  }
+}
+
+
+# Where is year?
 ## Assign variable names
-names(export) <- c("grade_level", "school_code", "sid", "male", "race_ethnicity", 
+names(export) <- c("sid", "school_code", "grade_level", "year", "male", 
+                   "race_ethnicity", 
                    "eco_dis", "title_1", "migrant", "lep", "iep", "rdg_ss", 
                    "math_ss", "wrtg_ss", "composition")
 
+
+# Final tweaks for Texas
+export %<>% filter(grade_level %in% c("3", "4", "5", "6", "7", "8"))
+
+# 9 digit sid
+export$sid <- stringr::str_pad(as.numeric(export$sid), 9, pad = "0")
+# 9 digit school_code
+export$school_code <- stringr::str_pad(as.numeric(export$school_code), 
+                                       9, pad = "0")
+# Race = first letter
+export$race_ethnicity %<>% as.character %>% substr(1, 1)
+# sex = first letter
+export$male %<>% as.character %>% substr(1, 1)
+# lep = 1/0
+export$lep %<>% as.numeric
+# econ_dis = 1/0
+export$eco_dis %<>% as.numeric
+
+
 # Save
 save(export, file = "data/synth_texas.rda")
+write.csv(export, file = "data/synth_texas.csv", 
+            row.names = FALSE)
 
 
 ## Tests to evaluate the synthetic data
