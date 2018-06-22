@@ -2,4 +2,30 @@
 [0K[?25hm[0Ke[0K[?25l-[0K[3G[?25h[4G[?25lme-o[0K[?25hn[0Kl[0Ky[0K[?25l
 [0K[?25hdata/synth_texas.R[0K[?25l
 data/synth_texas.rda[0K
-[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$[0K[74G[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[?25hi[0Kt[0K[78G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git a[0K[?25hd[0K[?25ld[0K[80G[?25h[81G[82G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git add -[0K[?25hA[0K
+[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$[0K[74G[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[?25hi[0Kt[0K[78G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git a[0K[?25hd[0K[?25ld[0K[80G[?25h[81G[82G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git add -[0K[?25hA[0K[?25l
+[0K[?25h[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$[0K[74G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[?25hi[0K[?25lt[0K[76G[?25h[77G[78G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git c[0K[78G[?25h[79G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git co[0K[?25hm[0Km[0Ki[0Kt[0K[85G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git commit -[0K[85G[?25h[86G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git commit -[0Km
+[0K[?25h[2G[?25l "[0K[?25hd[0Ka[0Kt[0Ka[0K[8G[?25l "data f[0K[?25hi[0Kx[0Ke[0Ks[0K[14G[13G[?25l "data fixes"[0K[13G[?25h[14G[?25l
+[0K[?25h[master 87d6861] data fixes[0K[?25l
+ 19 files changed, 30521 insertions(+), 6 deletions(-)[0K
+ create mode 100644 .Rproj.user/4AE79F75/console06/1C6C39C4[0K
+ create mode 100644 .Rproj.user/4AE79F75/console06/INDEX001[0K
+ create mode 100644 .Rproj.user/4AE79F75/pcs/files-pane.pper[0K
+ create mode 100644 .Rproj.user/4AE79F75/pcs/source-pane.pper[0K
+ create mode 100644 .Rproj.user/4AE79F75/pcs/windowlayoutstate.pper[0K
+ create mode 100644 .Rproj.user/4AE79F75/pcs/workbench-pane.pper[0K
+ create mode 100644 .Rproj.user/4AE79F75/persistent-state[0K
+ create mode 100644 .Rproj.user/4AE79F75/rmd-outputs[0K
+ create mode 100644 .Rproj.user/4AE79F75/saved_source_markers[0K
+ create mode 100644 .Rproj.user/4AE79F75/sources/prop/A14525CA[0K
+ create mode 100644 .Rproj.user/4AE79F75/sources/prop/INDEX[0K
+ create mode 100644 .Rproj.user/4AE79F75/sources/s-FF5DE374/53CEECCC[0K
+ create mode 100644 .Rproj.user/4AE79F75/sources/s-FF5DE374/53CEECCC-contents[0K
+ create mode 100644 .Rproj.user/4AE79F75/sources/s-FF5DE374/lock_file[0K
+ create mode 100644 .Rproj.user/shared/notebooks/patch-chunk-names[0K
+ create mode 100644 data/synth_texas.csv[0K
+ rewrite data/synth_texas.rda (97%)[0K
+ create mode 100644 opensdp_equity_report_template.Rproj[0K
+[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$[0K[74G[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[?25hi[0Kt[0K[78G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git p[0K[?25hu[0Ks[0Kh[0K[83G[82G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git pus[0K[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git pu[0K[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git p[0K[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git[0K[78G[?25h[77G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ gi[0K[77G[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[76G[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$[0K[75G[?25h[74G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[?25hi[0Kt[0K[78G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git r[0K[?25he[0K[?25ls[0K[80G[?25h[81G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git rese[0K[?25ht[0K[?25l
+Unstaged changes after reset:[0K
+M       .Rproj.user/4AE79F75/console06/1C6C39C4[0K
+[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$[0K[74G[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[?25hi[0Kt[0K[78G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git a[0K[?25hd[0Kd[0K[82G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git add -[0K[?25hA[0K
