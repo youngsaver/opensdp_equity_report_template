@@ -29,7 +29,7 @@ gap.test <- function(df, grade, outcome, features, sds) {
     dat.grade <- df[df[,grade]==gr,]
     
     #Get standard deviation for scale scores at that grade level
-    sd <- standard.devs[standard.devs[,grade]==gr,outcome]
+    sd <- sds[sds[,grade]==gr,outcome]
     
     #Loop over features
     for(feature in features){
@@ -74,6 +74,7 @@ gap.test <- function(df, grade, outcome, features, sds) {
 #Download data to test function with and standard deviations
 texas.data<-read.csv("../data/synth_texas.csv")
 standard.devs <- read.csv("../data/sd_table.csv")
+
 
 #Function test
 gap.test(df=texas.data,
