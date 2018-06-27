@@ -596,8 +596,8 @@ dems <- c("male","lep")
 
 #Create lists of grade/subject/subpop combos where want to test for gaps
 #For each demographic marker
-dem.male <- list( test1 = c(grade = 5, subject = "math_ss", group = c("Female","Male")),
-                  test2 = c(grade = 8, subject = "math_ss", group = c("Female","Male")))
+dem.male <- list( test1 = c(grade = 5, subject = "math_ss", group = c("F","M")),
+                  test2 = c(grade = 8, subject = "math_ss", group = c("F","M")))
 dem.lep  <- list( test1 = c(grade = 5, subject = "rdg_ss", group = c(0,1)),
                   test2 = c(grade = 8, subject = "rdg_ss", group = c(0,1)))
 
@@ -701,8 +701,8 @@ dems <- c("male","lep")
 
 #Create lists of grade/subject/subpop combos where want to measure medians
 #For each demographic marker
-dem.male <- list( test1 = c(grade = 5, subject = "math_ss", group = "Female"),
-                  test2 = c(grade = 8, subject = "math_ss", group = "Female"))
+dem.male <- list( test1 = c(grade = 5, subject = "math_ss", group = "F"),
+                  test2 = c(grade = 8, subject = "math_ss", group = "F"))
 dem.lep  <- list( test1 = c(grade = 5, subject = "rdg_ss", group = 1),
                   test2 = c(grade = 8, subject = "rdg_ss", group = 1))
 
@@ -798,8 +798,8 @@ dems <- c("male","lep")
 #
 ##Create lists of target grade/subject/subpop combos
 ##For each demographic marker
-dem.male <- list( test1 = c(grade = 5, subject = "math_ss", group = "Female"),
-                  test2 = c(grade = 8, subject = "math_ss", group = "Female"))
+dem.male <- list( test1 = c(grade = 5, subject = "math_ss", group = "F"),
+                  test2 = c(grade = 8, subject = "math_ss", group = "F"))
 dem.lep  <- list( test1 = c(grade = 5, subject = "rdg_ss", group = 1),
                   test2 = c(grade = 8, subject = "rdg_ss", group = 1))
 
@@ -912,7 +912,7 @@ data <- texas.data[texas.data$grade_level == 8,]
 
 # // Step 2: Recode variables and create cluster variable
 data$race_ethnicity <- as.factor(data$race_ethnicity)
-data$race_ethnicity <- relevel(data$race_ethnicity, ref = "White")
+data$race_ethnicity <- relevel(data$race_ethnicity, ref = "W")
 
 # // Step 3: Create a unique identifier for clustering standard errors 
 # at the school level
@@ -970,14 +970,30 @@ chartData <- bind_rows(betas_unadj, betas_adj_eco_dis, betas_adj_lep,
                     betas_adj_ecodis_lep)
 
 # // Step 6. Plot
-ggplot(chartData[chartData$term == "race_ethnicityHispanic or Latino Ethnicity", ],
+
+#Set y-axis limits
+lim2 <- -(min(chartData[chartData$term == "race_ethnicityH", "estimate"])-1)
+lim1 <- -(max(chartData[chartData$term == "race_ethnicityH", "estimate"])+1)
+
+if(lim2 > 0 & lim1 > 0){
+  
+  lim1 <- -1
+}
+
+if(lim2 < 0 & lim1 < 0){
+  
+  lim2 <- 1
+}
+
+#Make barplot
+ggplot(chartData[chartData$term == "race_ethnicityH", ],
        aes(x = model, y = -estimate, fill = model)) + 
         geom_bar(stat = 'identity', color = I("black")) + 
         scale_fill_brewer(type = "seq", palette = 8) +
         geom_hline(yintercept = 0) + 
         guides(fill = guide_legend("", keywidth = 6, nrow = 2)) + 
         geom_text(aes(label = -estimate, vjust = -0.3)) +
-        scale_y_continuous(limit = c(-3,2.5), name = "Scale Score") + 
+        scale_y_continuous(limit = c(lim1,lim2), name = "Scale Score") + 
         theme_classic() + theme(legend.position = "bottom", axis.text.x = element_blank(), 
                                 axis.ticks.x = element_blank()) + 
         labs(title = "Differences in 8th Grade Math Scores Between Latino and White Students", 
