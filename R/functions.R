@@ -14,13 +14,13 @@ gap.test <- function(df, grade, outcome, features, sds) {
   #Convert features to factors
   df[,features] <- lapply(df[,features], as.character)
   df[,features] <- lapply(df[,features], as.factor)
-  df[,features]
   
   #Get all grade levels for the chosen tested subject
   grades <- sds[!is.na(sds[,outcome]),grade]
   
-  #Will store all calculated achievement gaps
+  #Will store all calculated achievement gaps and effect sizes
   gaps <- vector()
+  effects <- vector()
   
   #Loop over grade levels
   for(gr in grades){
@@ -56,6 +56,17 @@ gap.test <- function(df, grade, outcome, features, sds) {
         gaps <- append(gaps,gap,length(gaps))
         names(gaps)[length(gaps)] <- paste(level1,"-",level2,feature,gr,outcome)
         
+        #Measure the effect size (r)
+        var.1 <- var(level1.data)
+        var.2 <- var(level2.data)
+        sd.pooled <- sqrt((var.1+var.2)/2)
+        d <- (mean(level1.data) - mean(level2.data))/sd.pooled
+        r <- d/sqrt(d^2+4)
+        
+        #Append effect size to list and name
+        effects <- append(effects,r,length(effects))
+        names(effects)[length(effects)] <- paste(level1,"-",level2,'\n',feature,gr,outcome)     
+        
         
       } #End loop over combinations
       
@@ -63,25 +74,91 @@ gap.test <- function(df, grade, outcome, features, sds) {
     
   } #End loop over grade levels
   
-  #Sort gaps largest to smallest in magnitude
-  sorted <- gaps[order(abs(gaps), decreasing=TRUE)]
+  #Sort gaps and effect sizes largest to smallest in magnitude
+  sorted.gaps <- gaps[order(abs(gaps), decreasing=TRUE)]
+  effects.sorted <- effects[order(abs(effects), decreasing = TRUE)]
   
-  #Prints 40 largest gaps
-  print(sorted[1:40])
+  #Prints 40 largest gaps and effect sizes
+  #print(sorted.gaps[1:40])
+  #print(effects.sorted[1:40])
+  
+  #Initialize
+  effects.feature <-vector()
+  i <- 1
+
+  #Loop over features
+  for(feature in features){
+    
+    #Loop over each effect size
+    for(i in 1:length(effects.sorted)){
+      
+      #Draw out effect sizes for current loop feature
+      if(regexpr(feature, names(effects.sorted[i]))[1] != -1){
+        
+        #Store in gaps.feature
+        effects.feature <- append(effects.feature,effects.sorted[i],length(effects.feature))
+        
+      } #End conditional
+      
+    }#End loop over effect sizes
+    
+    #Keep highest 35 effects (if applicable)
+    if(length(effects.feature) > 35){
+      effects.feature <- effects.feature[1:35]
+    }
+    
+    #Turn into dataframe
+    dat.effects <- data.frame(effects.feature)
+    dat.effects$names <- rownames(dat.effects)
+    rownames(dat.effects) <- NULL
+    
+    #Determine y-axis limits
+    if(min(dat.effects$effects.feature) < -0.11){
+      limit1 <- min(dat.effects$effects.feature)
+    }
+    else{
+      limit1 <- -.11
+    }
+    if(max(dat.effects$effects.feature) > 0.11){
+      limit2 <- max(dat.effects$effects.feature)
+    }
+    else{
+      limit2 <- .11
+    }
+    
+    #Barplot for feature
+    barp <- ggplot(dat.effects, aes(x= reorder(names, abs(effects.feature)), y=effects.feature)) +
+      geom_bar(position="dodge",stat="identity")+
+      scale_x_discrete(name = "School Code")+
+      scale_y_continuous(name = "Effect Size", limits = c(limit1,limit2))+
+      theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5, size=8))+
+      geom_hline(yintercept=0.1, linetype="solid", 
+                 color = "red", size=1)+
+      geom_hline(yintercept=-0.1, linetype="solid", 
+                 color = "red", size=1)+
+      ggtitle(feature)
+    
+    print(barp)
+    
+    #Empty vector
+    effects.feature <-vector()
+    
+  }#End loop over features
   
 }#End function
 
-#Download data to test function with and standard deviations
-texas.data<-read.csv("../data/synth_texas.csv")
-standard.devs <- read.csv("../data/sd_table.csv")
 
-
-#Function test
-gap.test(df=texas.data,
-         grade="grade_level",
-         outcome="rdg_ss",
-         features=c('eco_dis','lep','iep','race_ethnicity','male'),
-         sds=standard.devs)
+##Download data to test function with and standard deviations
+#texas.datar<-read.csv("../data/synth_texas.csv")
+#standard.devsr <- read.csv("../data/sd_table.csv")
+#
+#
+##Function test
+#gap.test(df=texas.datar,
+#         grade="grade_level",
+#         outcome="rdg_ss",
+#         features=c('eco_dis','lep','iep','race_ethnicity','male'),
+#         sds=standard.devsr)
 
 
 # R Function for Task 1
