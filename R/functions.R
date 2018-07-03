@@ -8,7 +8,7 @@ library(tidyverse)
 #outcome = name of outcome variable (usually test scores) in datasets (class: character)
 #features = vector of features in dataset where testing for gaps (class: character)
 #sds (optional) = dataframe containing the standard deviations for all test (class: data frame)
-#cut (optional) = Number of students of a certain demographic below which the function will ignore gaps
+#cut (optional) = Minimum number of students of for level in a gap (class: integer)
 ##Begin function
 gap.test <- function(df, grade, outcome, features, sds = NULL, cut = NULL) {
   
@@ -19,10 +19,6 @@ gap.test <- function(df, grade, outcome, features, sds = NULL, cut = NULL) {
     #Notify user
     message("No standard deviations provided. 
             Will use calculated standard deviations in prvoided dataset.")
-    
-    #Find grade levels tested in that subject
-    #tested.grades <- unique(df[!is.na(df[,outcome]),grade])
-    #tested.grades <- tested.grades[order(tested.grades)]
     
     #Find standard deviation for each grade
     sds.by.grades <- tapply(df[,outcome], df[,grade],sd)
@@ -105,6 +101,26 @@ gap.test <- function(df, grade, outcome, features, sds = NULL, cut = NULL) {
       #Get levels of feature
       lvl <- levels(dat.grade[,feature])
       
+      #Cut levels if cut point given
+      if(!is.null(cut)){
+        
+        #Table of factor values
+        lvl.table <- table(dat.grade[,feature])
+        
+        #Initialize vector of levels to cut
+        lvl <- names(lvl.table[lvl.table >= cut])
+        
+        #See if any levels left
+        if(length(lvl) < 2){
+          
+          #Error
+          stop(paste("Cut point too high: no data left to compare for",
+                     feature,gr,outcome))
+          
+        }#End inner conditional
+        
+      }#End outer conditional
+      
       #Get matrix of all combos of levels
       com.lvl <- combn(lvl,2)
       
@@ -171,8 +187,8 @@ gap.test <- function(df, grade, outcome, features, sds = NULL, cut = NULL) {
     }#End loop over effect sizes
     
     #Keep highest 35 effects (if applicable)
-    if(length(effects.feature) > 35){
-      effects.feature <- effects.feature[1:35]
+    if(length(effects.feature) > 20){
+      effects.feature <- effects.feature[1:20]
     }
     
     #Turn into dataframe
@@ -220,14 +236,12 @@ gap.test <- function(df, grade, outcome, features, sds = NULL, cut = NULL) {
 texas.datar<-read.csv("../data/synth_texas.csv")
 standard.devsr <- read.csv("../data/sd_table.csv")
 
-dummy.sds <- standard.devsr
-dummy.sds[1] <- "hi"
-
 #Function test
 gap.test(df=texas.datar,
          grade="grade_level",
          outcome="rdg_ss",
-         features=c('eco_dis','lep','iep','race_ethnicity','male'))
+         features=c('eco_dis','lep','iep','race_ethnicity','male'),
+         cut = 60)
 
 
 # R Function for Task 1
