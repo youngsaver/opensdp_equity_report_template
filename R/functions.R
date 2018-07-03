@@ -233,15 +233,15 @@ gap.test <- function(df, grade, outcome, features, sds = NULL, cut = NULL) {
 
 
 #Download data to test function with and standard deviations
-texas.datar<-read.csv("../data/synth_texas.csv")
-standard.devsr <- read.csv("../data/sd_table.csv")
-
-#Function test
-gap.test(df=texas.datar,
-         grade="grade_level",
-         outcome="rdg_ss",
-         features=c('eco_dis','lep','iep','race_ethnicity','male'),
-         cut = 60)
+#texas.datar<-read.csv("../data/synth_texas.csv")
+#standard.devsr <- read.csv("../data/sd_table.csv")
+#
+##Function test
+#gap.test(df=texas.datar,
+#         grade="grade_level",
+#         outcome="rdg_ss",
+#         features=c('eco_dis','lep','iep','race_ethnicity','male'),
+#         cut = 60)
 
 
 # R Function for Task 1
