@@ -14,13 +14,7 @@ gap.test <- function(df, grade, outcome, features, sds = NULL, cut = NULL) {
   
   #See if no standard deviations provided
   if(is.null(sds)){
-    
-    
-    df <- texas.datar
-    grade <- "grade_level"
-    outcome <- "rdg_ss"
-    
-    
+
     
     #Notify user
     message("No standard deviations provided. 
