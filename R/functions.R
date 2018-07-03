@@ -7,9 +7,83 @@ library(tidyverse)
 #grade = name of tested grade column in datasets (class: character)
 #outcome = name of outcome variable (usually test scores) in datasets (class: character)
 #features = vector of features in dataset where testing for gaps (class: character)
-#sds = dataframe containing the standard deviations for all test (class: data frame)
+#sds (optional) = dataframe containing the standard deviations for all test (class: data frame)
+#cut (optional) = Number of students of a certain demographic below which the function will ignore gaps
 ##Begin function
-gap.test <- function(df, grade, outcome, features, sds) {
+gap.test <- function(df, grade, outcome, features, sds = NULL, cut = NULL) {
+  
+  #See if no standard deviations provided
+  if(is.null(sds)){
+    
+    
+    df <- texas.datar
+    grade <- "grade_level"
+    outcome <- "rdg_ss"
+    
+    
+    
+    #Notify user
+    message("No standard deviations provided. 
+            Will use calculated standard deviations in prvoided dataset.")
+    
+    #Find grade levels tested in that subject
+    #tested.grades <- unique(df[!is.na(df[,outcome]),grade])
+    #tested.grades <- tested.grades[order(tested.grades)]
+    
+    #Find standard deviation for each grade
+    sds.by.grades <- tapply(df[,outcome], df[,grade],sd)
+    
+    #Create standard deviation dataframe
+    sds <- data.frame(grade_level = names(sds.by.grades),
+                         out = sds.by.grades)
+    colnames(sds)[2] <- outcome
+    rownames(sds) <- NULL
+    sds[,1] <- as.integer(as.character(sds[,1]))
+    sds[,2] <- as.numeric(as.character(sds[,2]))
+    
+    }#End of conditional
+  
+  #Test to make sure feature names and dimensions are correct
+  if(!any(colnames(sds)==grade) | 
+     !any(colnames(sds)==outcome) |
+     dim(sds)[1] > 20 ) {
+    
+    ex.sds <- data.frame(grade_level = c(3,4,5,6,7,8),
+                         math_ss = c(148.22,145.65,143.06,145.00,128.79,121.22),
+                         rdg_ss = c(132.00,127.53,128.76,123.57,120.79,124.79),
+                         wrtg_ss = c(NA,513.66,NA,NA,514.66,NA))
+    
+    message("sds object formatted incorrectly. Should be formatted 
+            like the following example, as a dataframe, first column is grade level
+            other columns are standard deviations for different test subjects,
+            feature names match names of dataframe features and function
+            inputs for 'grade' and 'outcome'.")
+    print(ex.sds)
+    
+    stop("Either re-format the input to sds or use function without
+            providing standard deviations")
+    
+    }#End of conditional
+  
+  #Test to see if data is correct class
+  if(class(sds[,grade]) != 'integer' | 
+    class(sds[,outcome]) != 'numeric') {
+      
+      ex.sds <- data.frame(grade_level = c(3,4,5,6,7,8),
+                           math_ss = c(148.22,145.65,143.06,145.00,128.79,121.22),
+                           rdg_ss = c(132.00,127.53,128.76,123.57,120.79,124.79),
+                           wrtg_ss = c(NA,513.66,NA,NA,514.66,NA))
+      
+      message("Error: Grade level in sds table should be class
+            'integer' and standard deviation columns shuld be class 'numeric'.
+              Like example below:")
+      
+      print(ex.sds)
+      
+      stop("Either re-format the input to sds or use function without
+           providing standard deviations")
+      
+    }#End of conditional
   
   #Convert features to factors
   df[,features] <- lapply(df[,features], as.character)
@@ -148,17 +222,18 @@ gap.test <- function(df, grade, outcome, features, sds) {
 }#End function
 
 
-##Download data to test function with and standard deviations
-#texas.datar<-read.csv("../data/synth_texas.csv")
-#standard.devsr <- read.csv("../data/sd_table.csv")
-#
-#
-##Function test
-#gap.test(df=texas.datar,
-#         grade="grade_level",
-#         outcome="rdg_ss",
-#         features=c('eco_dis','lep','iep','race_ethnicity','male'),
-#         sds=standard.devsr)
+#Download data to test function with and standard deviations
+texas.datar<-read.csv("../data/synth_texas.csv")
+standard.devsr <- read.csv("../data/sd_table.csv")
+
+dummy.sds <- standard.devsr
+dummy.sds[1] <- "hi"
+
+#Function test
+gap.test(df=texas.datar,
+         grade="grade_level",
+         outcome="rdg_ss",
+         features=c('eco_dis','lep','iep','race_ethnicity','male'))
 
 
 # R Function for Task 1
