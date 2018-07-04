@@ -9,10 +9,12 @@ library(tidyverse)
 #features = vector of features in dataset where testing for gaps (class: character)
 #n = set 'n' largest gaps the function outputs at the end (class: integer)
 #sds (optional) = dataframe containing the standard deviations for all test (class: data frame)
+#comp (optional) = Indicator to output additional comparative gap graphics (class: boolean, default: FALSE)
 #cut (optional) = Minimum number of students of for level in a gap (class: integer)
 #med (optional) = Indicator if would like function to also output top standardized difference of medians (class: boolean)
 ##Begin function
-gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, cut = NULL, med = FALSE) {
+gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FALSE, 
+                     cut = NULL, med = FALSE) {
   
   #See if no standard deviations provided
   if(is.null(sds)){
@@ -185,69 +187,73 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, cut = NULL
   effects.outcome <- effects.outcome[order(abs(effects), decreasing = TRUE)]
   mean_diffs <- mean_diffs[order(abs(effects), decreasing = TRUE)]
   
-  #Initialize
-  effects.feature <-vector()
-  i <- 1
-
-  #Loop over features
-  for(feature in features){
+  #If want to show gaps by feature, will make and show plots
+  if(comp){
     
-    #Loop over each effect size
-    for(i in 1:length(effects.sorted)){
-      
-      #Draw out effect sizes for current loop feature
-      if(regexpr(feature, names(effects.sorted[i]))[1] != -1){
-        
-        #Store in gaps.feature
-        effects.feature <- append(effects.feature,effects.sorted[i],length(effects.feature))
-        
-      } #End conditional
-      
-    }#End loop over effect sizes
-    
-    #Keep highest 20 effects (if applicable)
-    if(length(effects.feature) > 20){
-      effects.feature <- effects.feature[1:20]
-    }
-    
-    #Turn into dataframe
-    dat.effects <- data.frame(effects.feature)
-    dat.effects$names <- rownames(dat.effects)
-    rownames(dat.effects) <- NULL
-    
-    #Determine y-axis limits
-    if(min(dat.effects$effects.feature) < -0.11){
-      limit1 <- min(dat.effects$effects.feature)
-    }
-    else{
-      limit1 <- -.11
-    }
-    if(max(dat.effects$effects.feature) > 0.11){
-      limit2 <- max(dat.effects$effects.feature)
-    }
-    else{
-      limit2 <- .11
-    }
-    
-    #Barplot for feature
-    barp <- ggplot(dat.effects, aes(x= reorder(names, abs(effects.feature)), y=effects.feature)) +
-      geom_bar(position="dodge",stat="identity")+
-      scale_x_discrete(name = "Comparison")+
-      scale_y_continuous(name = "Effect Size", limits = c(limit1,limit2))+
-      theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5, size=8))+
-      geom_hline(yintercept=0.1, linetype="solid", 
-                 color = "red", size=1)+
-      geom_hline(yintercept=-0.1, linetype="solid", 
-                 color = "red", size=1)+
-      ggtitle(feature)
-    
-    print(barp)
-    
-    #Empty vector
+    #Initialize
     effects.feature <-vector()
-    
-  }#End loop over features
+    i <- 1
   
+    #Loop over features
+    for(feature in features){
+      
+      #Loop over each effect size
+      for(i in 1:length(effects.sorted)){
+        
+        #Draw out effect sizes for current loop feature
+        if(regexpr(feature, names(effects.sorted[i]))[1] != -1){
+          
+          #Store in gaps.feature
+          effects.feature <- append(effects.feature,effects.sorted[i],length(effects.feature))
+          
+        } #End conditional
+        
+      }#End loop over effect sizes
+      
+      #Keep highest 20 effects (if applicable)
+      if(length(effects.feature) > 20){
+        effects.feature <- effects.feature[1:20]
+      }
+      
+      #Turn into dataframe
+      dat.effects <- data.frame(effects.feature)
+      dat.effects$names <- rownames(dat.effects)
+      rownames(dat.effects) <- NULL
+      
+      #Determine y-axis limits
+      if(min(dat.effects$effects.feature) < -0.11){
+        limit1 <- min(dat.effects$effects.feature)
+      }
+      else{
+        limit1 <- -.11
+      }
+      if(max(dat.effects$effects.feature) > 0.11){
+        limit2 <- max(dat.effects$effects.feature)
+      }
+      else{
+        limit2 <- .11
+      }
+      
+      #Barplot for feature
+      barp <- ggplot(dat.effects, aes(x= reorder(names, abs(effects.feature)), y=effects.feature)) +
+        geom_bar(position="dodge",stat="identity")+
+        scale_x_discrete(name = "Comparison")+
+        scale_y_continuous(name = "Effect Size", limits = c(limit1,limit2))+
+        theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5, size=8))+
+        geom_hline(yintercept=0.1, linetype="solid", 
+                   color = "red", size=1)+
+        geom_hline(yintercept=-0.1, linetype="solid", 
+                   color = "red", size=1)+
+        ggtitle(feature)
+      
+      print(barp)
+      
+      #Empty vector
+      effects.feature <-vector()
+    
+    }#End loop over features
+  
+  }#End conditional
   
   #Prints n largest gaps and meaning
   #Standardized difference of medians
@@ -359,9 +365,10 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, cut = NULL
 ##Function test
 #a <- gap.test(df=texas.datar,
 #         grade="grade_level",
-#         outcome="rdg_ss",
+#         outcome="math_ss",
 #         features=c('eco_dis','lep','iep','race_ethnicity','male'),
 #         cut = 60,
+#         sds = standard.devsr,
 #         med = TRUE)
 
 
