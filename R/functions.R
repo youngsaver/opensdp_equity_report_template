@@ -341,8 +341,6 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, cut = NULL
   
   rownames(output.table) <- NULL
   
-  print(effects.level1[1:n])
-  
   #Return table of effect sizes
   return(output.table)
   
@@ -352,7 +350,7 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, cut = NULL
 ##Download data to test function with and standard deviations
 #texas.datar<-read.csv("../data/synth_texas.csv")
 #standard.devsr <- read.csv("../data/sd_table.csv")
-
+#
 ##Function test
 #View(gap.test(df=texas.datar,
 #         grade="grade_level",
