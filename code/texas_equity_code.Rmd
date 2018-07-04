@@ -76,6 +76,12 @@ The Texas Education Agency data files have hundreds of features attached to each
 | `wrtg_ss`       | Scale score for writing exam                        |  
 | `composition`   | Score on writing composition exam                   |
 
+We will quantify the gaps according to the state-wide standard deviation for the year, test, and grade level in which the gap exists. Here is a table showing the distribution info (including standard deviation) for all the tests from 2014 (most state education agencies report something like this):
+
+<img src="../img/staar_2014_dist.png" style="display: block; margin: 0 auto; height: 350px;">
+
+This data is used in the code, specifically imported into the `sd.table` variable.
+
 #### Loading the OpenSDP Dataset and R Packages
 
 This guide takes advantage of the OpenSDP synthetic dataset and several key R packages. The first chunk of code below loads the R packages (make sure to install first!), and the second chunk loads the dataset and provides us with variable labels.
@@ -101,8 +107,8 @@ source("../R/functions.R")
 # // Step 1: Read in csv file of our dataset, naming it "texas.data"
 texas.data <- read.csv("../data/synth_texas.csv")  
 
-# // Step 2: View data file
-View(texas.data)
+# // Step 2: Read in file containing state-wide standard deviations for standardized tests
+sd.table <- read.csv("../data/sd_table.csv")
 
 # // Step 3: Create a vector of labels for feature names in our dataset 
 #These labels will appear in visualizations and tables
@@ -179,98 +185,150 @@ This guide is an open-source document hosted on Github and generated using R Mar
 - Why do these differences occur?
 - What differences do you want to explore further?
 
-**Analytic Technique:** Calculate the summary statistics for exam performance, for all 5th and 8th grade exam takers. Note: Once you set which tests and which grade levels you would like to analyze here, the code (as written) will analyze those grade levels and tests for the rest of the guide.
+**Analytic Technique:** Identify major achievement gaps within your student population. To achieve this, we use the SDP function `gap.test`, which is defined in the repository's `R` folder. Here is the usage information:
+
+`gap.test`: Visualizes and quantifies gaps in student performance across demographic markers.
+
+Output: A `data.frame` table of the top `n` gaps, as measured by effect size, as well as the demographic and test information for each gap.
+
+Inputs:
+
+- data = dataset to explore, should be wide format and have column for grade level (class: data frame)
+- grade = name of tested grade column in datasets (class: character)
+- outcome = name of outcome variable (usually test scores) in datasets (class: character)
+- features = vector of features in dataset where testing for gaps (class: character)
+- n = Number of largest gaps the function outputs (class: integer, default: 3)
+- sds (optional) = dataframe containing the standard deviations for all test (class: data frame, default: NULL)
+- cut (optional) = Minimum number of students of for level in a gap (class: integer, default: NULL)
+- med (optional) = Indicator if would like function to also output top standardized difference of medians (class: boolean, default: FALSE)
+
+More detailed usage information can be found in the `R` folder in the GitHub repository. We use the function here to find the top 3 gaps in math scores (in terms of effect size) between students of different economic disadvantage levels, races, genders, Special Education statuses, and LEP statuses. We check among all grades: 3-8. The number of top gaps shown can be changed based on user inputs, as well as the gap categories and subject areas measured.
+
+```{r GapTest, echo=TRUE}
+#Use 'gap.test' function to explore most major gaps in student population
+gap.table <- gap.test(df=texas.data,
+                    grade="grade_level",
+                    outcome="math_ss",
+                    features=c('eco_dis','lep','iep','race_ethnicity','male'),
+                    sds = sd.table,
+                    n = 3,
+                    cut = 60,
+                    med = TRUE)
+
+```
+
+The `gap.test` output shows us that the top 3 gaps are **Insert final gaps here**. The function also stores a table of each effect size, the mean difference (to show the gap on the scale of the test), and the demographic information of the gap (groups affected, grade level, test subject).
+
+Measuring the gaps in terms of effect size allows us to compare gaps across grade levels and subject areas, as effect size standardizes the gap by taking into account the pooled standard deviation of the tested groups on the tests they took. A good rule  of thumb is that an effect size greater in magnitude than 0.1 usually means there is a large gap in student group performances. Hence, horizontal lines are labeled on the graph at 0.1 and -0.1. Gaps that surpass these thresholds should be looked at more thoroughly.
+
+One technical note: Sometimes the distibutions of tests scores could be skewed, making the median a more advantageous measure of central tendency (since it is less sensitive to outliers and skew). In these cases, set the `gap.test` function's `med` parameter to `TRUE` (as was done here) to output a plot that shows the top 3 gaps as measured by the standardized median difference.
+
+Since our largest effect size gap was **Insert here** we will explore that gap further. For demonstration purposes, we will focus on just that one gap here. However, the next chunk of code will determine which gap(s) will be explored in the rest of our analyses. The user can explore multipe gaps at once by setting the following variables to include multiple gaps from `gap.table`. This is shown in commented out code at the bottom of the chunk.
+
+```{r SetGaps, echo=TRUE}
+# // Step 1: Choose to analyze just the largest gap
+gaps <- gap.table[1,]
+rownames(gaps) <- NULL
+
+##Note: to choose the analyze the top 'k' gaps, you would do this:
+#gaps <- gap.table[1:k,]
+#rownames(gaps) <- NULL
+
+##Note: to choose the kth-jth gaps, you would do this:
+#gaps <- gap.table[k:j,]
+#rownames(gaps) <- NULL
+
+##Note: to choose the kth gap only, you would do this:
+#gaps <- gap.table[k,]
+#rownames(gaps) <- NULL
+
+# // Step 2: Set the number of gaps you'll be analyzing
+n.gaps <- 1
+
+```
+
+**Analytic Technique:** Calculate the summary statistics for exam performance, for all students at the grade level(s) in which you measure gaps. 
+
 ```{r Averages, echo=TRUE}
-# // Step 1: Set which tested grade levels to analyze (5th and 8th here)
-grades <- c("5","8")
-
-# // Step 2: Set which tested subjects to analyze (math and reading here)
-subjects <- c("rdg_ss","math_ss")
-
-# // Step 3: Calculate summary stats for each grade level
-# Loop over grade level
-for(grade in grades){
+#Print summary statistics for each gap's grade level
+#Loop over gap number in our table of gaps
+for(i in 1:n.gaps){
+  
+  #Save grade and subject tested information
+  grade <- gaps[i,"grade_level"]
+  subject <- gaps[i,"outcome"]
   
   data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  print(paste("grade level: ",grade))
-  a <- summary(data[,subjects]) #Summary stats table for grade
-  colnames(a) <- labels[subjects]  #Label table
+  print(paste("Grade level:",grade,", Outcome:",labels[subject]))
+  a <- summary(data[,subject]) #Summary stats table for grade and test
   print(a) #Print summary table
   
-} #End loop over grade level
+}#End loop over gap number
 
 ```
 
 **Analytic Technique:** In order to give us a further sense of the distributions behind these summary statistics, we will create some visualizations of the data. Specifically, here we use box plots and histograms
 
 ```{r VisualizeTotals, echo=TRUE}
-# // Visualization 1: Box plots
-#Loop over tested subjects
-for(subject in subjects){
+# // Visualizations: Box plots and Histograms
+#Loop over gap number in our table of gaps
+for(i in 1:n.gaps){
   
-  data = texas.data[texas.data$grade_level == grades,] #Isolates 5th and 8th graders
+  #Save grade and subject tested information
+  grade <- gaps[i,"grade_level"]
+  subject <- gaps[i,"outcome"]
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates 5th and 8th graders
   
     #Set variables and parameters for our boxplot
     p <- ggplot(data, aes(x=as.factor(grade_level), y=data[,subject])) + 
           geom_boxplot() +
-          ggtitle(paste(labels[subject], ", by Grade Level")) +
+          ggtitle(paste("Grade:",grade,",",labels[subject], "(all students)")) +
           scale_y_continuous(name=labels[subject]) +
           scale_x_discrete(name="Grade Level")
-    print(p) 
     
-
-} #End loop over tested subjects
-
-# // Comparison 2: Histograms of scores for eco_dis students
-#Loop over grade levels
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){ 
-    #Set variables and parameters for our boxplot
+    print(p) #Print boxpolot
+    
+    #Set variables and parameters for our histogram
     p <- ggplot(data, aes(x=data[,subject])) + 
-          ggtitle(paste("Grade: ",grade,", ",labels[subject], " (all students)"))+
-          geom_histogram(alpha = 0.5, binwidth = 50, fill = "dodgerblue", color = "dodgerblue") + 
+          ggtitle(paste("Grade:",grade,",",labels[subject], "(all students)"))+
+          geom_histogram(alpha = 0.5, binwidth = 50, fill = "dodgerblue", 
+                         color = "dodgerblue") + 
           scale_x_continuous(name=paste(labels[subject])) 
-    print(p) 
     
-  } #End loop over tested subject
-  
-} #End loop over grade level
+    print(p) #Print histogram
+    
+
+}#End loop over gap number
+
 ```
 
-**Analytic Technique:** Now that we have some measures for the performance on exams among all of our students, we can create those same measures for our various subpopulations of students. We will start by comparing descriptive statistics among different student demographic populations (income, race, and gender).
+**Analytic Technique:** Now that we have some measures for the performance on exams among all of our students, we can create those same measures for our various subpopulations of students. We will start by comparing descriptive statistics among the different student demographic populations described in our gaps.
 
 ```{r DescriptiveDemographics, echo=TRUE}
-# // Step 1: Initialize Demographics to Analyze
-#Vector with features we want to analyze: Econ Disadvantage, Race Ethnicity, Gender
-dems <- c("eco_dis","race_ethnicity","male")
-
-# // Comparisons: Generating summary stats for Eco Dis, Race Ethnicity, and Gender
-#Loop over grade levels
-for(grade in grades){
+# // Comparisons: Generating summary stats for demographics in gaps
+#Loop over gap number in our table of gaps
+for(i in 1:n.gaps){
   
+  #Save grade, subject tested, and demographic information
+  grade <- gaps[i,"grade_level"]
+  subject <- gaps[i,"outcome"]
+  dem <- gaps[i,"feature"]
+  lvl1 <- gaps[i,"level_1"]
+  lvl2 <- gaps[i,"level_2"]
+  
+  #Isolate data for grade and gap demographics
   data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  data = data[data[,dem] == lvl1 | data[,dem] == lvl2, ]#Isolates demographic groups
   
-  #Loop over tested subject
-  for(subject in subjects){
-    
-    print(paste("Grade: ",grade,", ",labels[subject])) #Print subject and grade level
-    
-    #Loop over demographic features
-    for(dem in dems){
-      
-      a<-Summarize(data[,subject] ~ data[,dem]) #Makes comparison table
+  #Print subject and grade level
+  print(paste("Grade:",grade,",",labels[subject])) 
+
+  a<-Summarize(data[,subject] ~ data[,dem]) #Makes comparison table
       colnames(a)[1] <- labels[dem] #Labels comparison table
       print(a) #Prints comparison table
-      
-    } #End loop over demogrpahic features
-    
-  } #End loop over tested subject
   
-} #End loop over grade level
+} #End loop over gap number
 
 ```
 
@@ -280,271 +338,105 @@ for(grade in grades){
 # // Step 1: Initialize a set of distinguishable colors for graphics
 colors <- c("red","dodgerblue3","green","coral","violet","burlywood2","grey68")
 
-# // Comparison: Box plots and histograms of scores for Econ Disadvantage, Race, and Gender
-#Loop over grade levels
-for(grade in grades){
+#Loop over gap number in our table of gaps
+for(i in 1:n.gaps){
+  
+  #Save grade, subject tested, and demographic information
+  grade <- gaps[i,"grade_level"]
+  subject <- gaps[i,"outcome"]
+  dem <- gaps[i,"feature"]
+  lvl1 <- gaps[i,"level_1"]
+  lvl2 <- gaps[i,"level_2"]
   
   data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){
-    
-    #Loop over demographic features
-    for(dem in dems){
+  data = data[data[,dem] == lvl1 | data[,dem] == lvl2, ]#Isolates demographic groups
       
-        #Set variables and parameters for our boxplot
-        bp <- ggplot(data, aes(x=as.factor(data[,dem]), y=data[,subject])) + 
-              geom_boxplot() +
-              ggtitle(paste("Grade: ",grade,", ", labels[subject],", by ",labels[dem])) +
-              scale_y_continuous(name=labels[subject]) +
-              scale_x_discrete(name=labels[dem])
-        print(bp) #Print box plot
-        
-        #Set variables and parameters for our histogram
-        h <- ggplot(data, aes(x=data[,subject], fill = as.factor(data[,dem]))) + 
-              ggtitle(paste("Grade: ",grade,", ", labels[subject],", by ",labels[dem]))+
-              geom_histogram(alpha = 0.5, binwidth = 50) + 
-              scale_fill_manual(name=labels[dem],
-                                values=colors[1:length(levels(as.factor(data[,dem])))])+
-              scale_x_continuous(name=paste(labels[subject], ", Grade", grade)) 
-        print(h) #Print histogram
-      
-    }#End loop over demographic features
-    
-  } #End loop over tested subject
+  #Set variables and parameters for our boxplot
+  bp <- ggplot(data, aes(x=as.factor(data[,dem]), y=data[,subject])) + 
+        geom_boxplot() +
+        ggtitle(paste("Grade:",grade,",", labels[subject],", by",labels[dem])) +
+        scale_y_continuous(name=labels[subject]) +
+        scale_x_discrete(name=labels[dem])
+  print(bp) #Print box plot
   
-} #End loop over grade level
+  #Set variables and parameters for our histogram
+  h <- ggplot(data, aes(x=data[,subject], fill = as.factor(data[,dem]))) + 
+        ggtitle(paste("Grade:",grade,",", labels[subject],", by",labels[dem]))+
+        geom_histogram(alpha = 0.5, binwidth = 50) + 
+        scale_fill_manual(name=labels[dem],
+                          values=colors[1:length(levels(as.factor(data[,dem])))])+
+        scale_x_continuous(name=paste(labels[subject], ", Grade", grade)) 
+  print(h) #Print histogram
+
+} #End loop over gap number
 ```
 
+**Analytic Technique:** Often, it can be helpful to look at the intersections of the demographic data we pulled. In particular, exploring possible gaps among combinations of race, socioeconomic status, gender, and student label status (LEP, Spec Ed, Migrancy, etc.) can elucidate further achievement gaps in the data. Here, we will explore the intersection of socioeconomic status (measured by economic disadvantage) and the gap we are measuring, by measuring that gap within each level of socioeconomic statsu in our data. The user can change the comparison from socioeconomic status to another factor by manipulating the `group.by` variable.
 
-**Analytic Technique:** Next we will extend these comparisons to different student status populations, in relation to special education, migrancy status, and LEP status. It's the same code, but now we just change our demographic indicators to the new ones we'd like to analyze (how convenient!). We start with the descriptive statistics in this first chunk, then move to visualizations in the next chunk.
-
-```{r DescriptiveStatus, echo=TRUE}
-# // Step 1: Initialize Demographics to Analyze
-#Vector with features we want to analyze: Special Education, Migrancy, and LEP Status
-##NOTE MIGRANCY DATA JUST 'NAs' SO NOT INCLUDED YET IN ANALYSIS##
-dems <- c("iep","lep")
-
-# // Comparisons: Generating summary stats for Spec Ed, Migrancy, and LEP
-#Loop over grade levels
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){
-    
-    print(paste("Grade: ",grade,", ",labels[subject])) #Print subject and grade level
-    
-    #Loop over demographic features
-    for(dem in dems){
-      
-      a<-Summarize(data[,subject] ~ data[,dem]) #Makes comparison table
-      colnames(a)[1] <- labels[dem] #Labels comparison table
-      print(a) #Prints comparison table
-      
-    } #End loop over demogrpahic features
-    
-  } #End loop over tested subject
-  
-} #End loop over grade level
-
-```
-
-Now for visualizations:
-
-```{r VisualizeStatus, echo=TRUE}
-# // Comparison: Box plots and histograms of scores for Special Education, Migrancy, and LEP Status
-#Loop over grade levels
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  #Loop over tested subject
-  for(subject in subjects){
-    
-    #Loop over demographic features
-    for(dem in dems){
-      
-        #Set variables and parameters for our boxplot
-        bp <- ggplot(data, aes(x=as.factor(data[,dem]), y=data[,subject])) + 
-              geom_boxplot() +
-              ggtitle(paste("Grade: ",grade,", ", labels[subject],", by ",labels[dem])) +
-              scale_y_continuous(name=labels[subject]) +
-              scale_x_discrete(name=labels[dem])
-        print(bp) #Print box plot
-        
-        #Set variables and parameters for our histogram
-        h <- ggplot(data, aes(x=data[,subject], fill = as.factor(data[,dem]))) + 
-              ggtitle(paste("Grade: ",grade,", ", labels[subject],", by ",labels[dem]))+
-              geom_histogram(alpha = 0.5, binwidth = 50) + 
-              scale_fill_manual(name=labels[dem],
-                                values=colors[1:length(levels(as.factor(data[,dem])))])+
-              scale_x_continuous(name=paste(labels[subject], ", Grade", grade)) 
-        print(h) #Print histogram
-      
-    }#End loop over demographic features
-    
-  } #End loop over tested subject
-  
-} #End loop over grade level
-```
-
-**Analytic Technique:** Often, it can be helpful to look at the intersections of the demographic data we pulled. In particular, exploring possible gaps among combinations of race, socioeconomic status, gender, and student label status (LEP, Spec Ed, Migrancy, etc.) can elucidate further achievement gaps in the data. Here, we will explore two intersections: race-ethnicity and gender as well as socioeconomic status and special education enrollment.
-
-We start with descriptive statistics:
+We perform this through descriptive statistics and data visuals:
 
 ```{r DescriptiveCombos, echo=TRUE}
-# // Analysis 1: Comparing within groups--Gender gaps within race
-
-#Set the feature you would like to compare within
-group.by <- "race_ethnicity"
-
-#Set the feature you are comparing
-compare.by <- "male"
-
-# Loop over grade levels
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  res <- levels(as.factor(data[,group.by])) #All the different race-ethnicities we will explore
-  
-  #Loop over tested subject
-  for(subject in subjects){
-    
-    print(paste("Grade: ",grade,", ",labels[subject])) #Print subject and grade level
-    
-    #Loop over race-ethnicities
-    for(re in res){
-      
-      #Isolates observations from particular race-ethnicity
-      data.res <- data[data[,group.by]==re,]
-      
-      #Makes comparison table across genders within each race-ethnicity group
-      a<-Summarize(data.res[,subject] ~ data.res[,compare.by]) #Makes comparison table
-      colnames(a)[1] <- labels[compare.by]
-      print(paste(labels[group.by],": ",re))
-      print(a) #Prints comparison table
-      
-    } #End loop over race-ethnicities
-    
-    cat("\n\n") #spacer line
-    
-  } #End loop over tested subject
-  
-} #End loop over grade level
-
-# // Analysis 2: Comparing proportions enrolled in a program
-#This analysis will compare what percentage of each econ_dis category has an IEP
-#First will look at proportions among all grade levels
-cont.table <- with(texas.data, table(eco_dis,iep))
-
-cont.table #Frequency table
-round(prop.table(cont.table,1)*100) #Proportion contingency table
-
-#Now we will look at proportions within grade levels
-#Loop over grade levels
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  
-  print(paste("Grade: ",grade)) #Print grade level
-  
-  cont.table <- with(data, table(eco_dis,iep))
-  print(cont.table) #Frequency table
-  print(round(prop.table(cont.table,1)*100)) #Proportion contingency table
-  
-} #End loop over grade level
-
-# // Analysis 3: Comparing within groups--Special Ed gaps within Socioeconomic levels
-#Note: same code as analysis 1, just with different set features in first lines
+# // Analysis 1: Comparing within groups--Socioeconomic gaps within our chosen features
 #Set the feature you would like to compare within
 group.by <- "eco_dis"
 
-#Set the feature you are comparing
-compare.by <- "iep"
-
-# Loop over grade levels
-for(grade in grades){
+#Loop over gap number in our table of gaps
+for(i in 1:n.gaps){
+  
+  #Save grade, subject tested, and demographic information
+  grade <- gaps[i,"grade_level"]
+  subject <- gaps[i,"outcome"]
+  dem <- gaps[i,"feature"]
+  lvl1 <- gaps[i,"level_1"]
+  lvl2 <- gaps[i,"level_2"]
   
   data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  res <- levels(as.factor(data[,group.by])) #All the different levels of economic disadvantage
+  data = data[data[,dem] == lvl1 | data[,dem] == lvl2, ]#Isolates demographic groups
+  res <- levels(as.factor(data[,group.by])) #Different levels of eco_dis to explore
+
+  print(paste("Grade:",grade,",",labels[subject])) #Print subject and grade level
   
-  #Loop over tested subject
-  for(subject in subjects){
+  #Loop over group.by levels
+  for(re in res){
     
-    print(paste("Grade: ",grade,", ",labels[subject])) #Print subject and grade level
+    #Isolates observations from particular group in group.by
+    data.res <- data[data[,group.by]==re,]
     
-    #Loop over levels of econ-dis
-    for(re in res){
-      
-      #Isolates observations from particular econ-dis level
-      data.res <- data[data[,group.by]==re,]
-      
-      #Makes comparison table for special ed enrollemnt within econ-dis level
-      a<-Summarize(data.res[,subject] ~ data.res[,compare.by]) #Makes comparison table
-      colnames(a)[1] <- labels[compare.by]
-      print(paste(labels[group.by],": ",re))
-      print(a) #Prints comparison table
-      
-    } #End loop over econ-dis level
+    #Makes gap comparison table for particular group
+    a<-Summarize(data.res[,subject] ~ data.res[,dem]) #Makes comparison table
+    colnames(a)[1] <- labels[dem]
+    print(paste(labels[group.by],": ",re))
+    print(a) #Prints comparison table
     
-    cat("\n\n") #spacer line
-    
-  } #End loop over tested subject
-  
-} #End loop over grade level
-
-```
-
-We continue with data visuals:
-
-```{r VisualizeCombos, echo=TRUE}
-# // Comparison: Box plots and histograms of scores comparing gender within race-ethnicity
-
-#Set the feature you would like to compare within
-group.by <- "race_ethnicity"
-
-#Set the feature you are comparing
-compare.by <- "male"
-
-#Loop over grade levels
-for(grade in grades){
-  
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
-  res <- levels(as.factor(data[,group.by])) #All the different race-ethnicities we will explore
-  
-  #Loop over tested subject
-  for(subject in subjects){
-    
-    #Loop over demographic features
-    for(re in res){
-      
-        #Isolates observations from particular race-ethnicity
-        data.res <- data[data[,group.by]==re,]
-      
-        #Set variables and parameters for our boxplot
-        bp <- ggplot(data.res, aes(x=as.factor(data.res[,compare.by]), y=data.res[,subject])) + 
+    #Set variables and parameters for our boxplot
+    bp <- ggplot(data.res, aes(x=as.factor(data.res[,dem]), 
+                               y=data.res[,subject])) + 
               geom_boxplot() +
-              ggtitle(paste("Grade: ",grade,", ", labels[subject],", ",re)) +
+              ggtitle(paste("Grade:",grade,",", 
+                            labels[subject],",",labels[group.by],": ",re)) +
               scale_y_continuous(name=labels[subject]) +
-              scale_x_discrete(name=labels[compare.by])
-        print(bp) #Print box plot
+              scale_x_discrete(name=labels[dem])
         
-        #Set variables and parameters for our histogram
-        h <- ggplot(data.res, aes(x=data.res[,subject], fill = as.factor(data.res[,compare.by]))) + 
-              ggtitle(paste("Grade: ",grade,", ", labels[subject],", ",re))+
+    print(bp) #Print box plot
+        
+    #Set variables and parameters for our histogram
+    h <- ggplot(data.res, aes(x=data.res[,subject], 
+                              fill = as.factor(data.res[,dem]))) + 
+              ggtitle(paste("Grade:",grade,",", 
+                            labels[subject],",",labels[group.by],": ",re))+
               geom_histogram(alpha = 0.5, binwidth = 50) + 
-              scale_fill_manual(name=labels[compare.by],
-                                values=colors[1:length(levels(as.factor(data.res[,compare.by])))])+
-              scale_x_continuous(name=paste(labels[subject], ", Grade", grade)) 
-        print(h) #Print histogram
-      
-    }#End loop over race-ethnicity
+              scale_fill_manual(name=labels[dem],
+                                values=colors[1:length(levels(as.factor(data.res[,dem])))])+
+              scale_x_continuous(name=paste(labels[subject])) 
+        
+    print(h) #Print histogram
     
-  } #End loop over tested subject
+  } #End loop over group.by levels
   
-} #End loop over grade level
+  cat("\n\n") #spacer line
+  
+} #End loop over gap number
+
 ```
 
 ### Comparing gaps at schools
@@ -572,98 +464,65 @@ for(grade in grades){
 - Where are the gaps most exaggerated? Where are the gaps narrowest?
 - What further analyses could we do to investigate the reasons behind gap variation at different schools?
 
-**Analytic Technique:** We will be calculating achievement gaps using median scores on state tests for our subpopulations. We have decided to use medians, rather than means, because the distributions for our test scores (as shown in the histograms above) tend to be skewed left or right. With such skew, means can often be inflated or deflated due to outliers. Medians, which are less sensitive to skew, are often more effective measures of central tendency in such cases. 
-
-We will quantify the gaps according to the state-wide standard deviation for the year, test, and grade level in which the gap exists. Here is a table showing the distribution info (including standard deviation) for all the tests from 2014 (all state education agencies should report something like this):
-
-<img src="../img/staar_2014_dist.png" style="display: block; margin: 0 auto; height: 350px;">
-
-Since we found above that the gender gap in math and the LEP status gap in reading were the widest gaps district-wide, we will focus on quantifying those gaps within the schools.
+**Analytic Technique:** We will be calculating achievement gaps using median scores on state tests for our subpopulations. We have decided to use medians, rather than means, because the distributions for our test scores (as shown in the histograms above) tend to be skewed left or right. With such skew, means can often be inflated or deflated due to outliers. Medians, which are less sensitive to skew, are often more effective measures of central tendency in such cases. We will calculate and compared the standardized median differences within schools.
 
 ```{r SchoolGaps, echo=TRUE}
-# // Step 1: Initialize table of scale score standard deviations for our tests
-#Import csv file I made with standard deviations in scale scores for all exams
-sd.table <- read.csv("../data/sd_table.csv")
-View(sd.table)
-
-#Index table rows by grade level
-rownames(sd.table) <- sd.table$grade
-View(sd.table)
-
-# // Step 2: Create lists of demographic markers and their grade/subject gaps to measure
-#Initialize demographic markers where you want to measure gaps
-dems <- c("male","lep")
-
-#Create lists of grade/subject/subpop combos where want to test for gaps
-#For each demographic marker
-dem.male <- list( test1 = c(grade = 5, subject = "math_ss", group = c("F","M")),
-                  test2 = c(grade = 8, subject = "math_ss", group = c("F","M")))
-dem.lep  <- list( test1 = c(grade = 5, subject = "rdg_ss", group = c(0,1)),
-                  test2 = c(grade = 8, subject = "rdg_ss", group = c(0,1)))
-
-#Combine lists by demographic marker
-test.lists <- list(male = dem.male, lep = dem.lep)
-
-# // Step 3: Measure and sort median differences by school
-#Loop over demographic marker
-for(dem in dems){
+# // Measure and sort standardized median differences by school
+#Loop over gap number in our table of gaps
+for(i in 1:n.gaps){
   
-  #Saves grade/subject lists for demographic marker
-  tests <- test.lists[[dem]]
+  #Save grade, subject tested, and demographic information
+  grade <- gaps[i,"grade_level"]
+  subject <- gaps[i,"outcome"]
+  dem <- gaps[i,"feature"]
+  lvl1 <- gaps[i,"level_1"]
+  lvl2 <- gaps[i,"level_2"]
   
-  #Loop over grade/subject/subpopulation combos
-  for(test in tests){
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  data = data[data[,dem] == lvl1 | data[,dem] == lvl2, ]#Isolates demographic groups
     
-    #Save grade, subject, and subpopulations
-    grade <- test["grade"][[1]]
-    subject <- test["subject"][[1]]
-    group1 <- test["group1"][[1]]
-    group2 <- test["group2"][[1]]
-    
-    data <- texas.data[texas.data$grade_level == grade,] #Isolates grade level
-    data <- data[data[,dem]== group1 | data[,dem]== group2, ] #Isolates subpopulations
-    
-    #Finds overall district scaled median difference
-    dis.meds <- tapply(data[,subject], data[,dem], median, na.rm=TRUE)
-    dis.diff <- (dis.meds[group2] - dis.meds[group1])/sd.table[grade,subject]
-    names(dis.diff) <- c("district")
-    
-    #Finds medians by school and demographic marker
-    school.meds <- tapply(data[,subject], 
-                          list(data$school_code, data[,dem]), 
-                          median, na.rm=TRUE)
-    
-    #Finds gaps and scales by standard deviation
-    differences <- (school.meds[,group2] - school.meds[,group1])/sd.table[grade,subject]
-    differences <- c(differences, dis.diff) #include district-wide difference
-    
-    #Sorts the gaps (smallest to largest), converts to dataframe, appends distrist median difference
-    differences <- differences[order(differences)]
-    med_diff_table <- data.frame(school_code = names(differences),
-                                   median_diff = differences)
-    rownames(med_diff_table) <- NULL
-    
-    #Prints table of differences
-    print(paste(labels[dem], ", difference of medians: ", 
-                group2, " - ",group1))
-    print(paste("Grade: ",grade,", ",labels[subject]))
-    print(med_diff_table)
-    cat("\n\n")
-    
-    #Shows barplot of school median differences
-    barp <- ggplot(med_diff_table, aes(x= reorder(school_code, median_diff), y=median_diff)) +
-                  geom_bar(position="dodge",stat="identity")+
-                  scale_x_discrete(name = "School Code")+
-                  scale_y_continuous(name = "Scaled Median Difference")+
-                  ggtitle(paste("Grade",grade,labels[subject], 
-                                "Median Differences ", labels[dem],
-                                "(",group2, "-",group1,")"))
-    
-    print(barp)
-    
-  } # End loop over grade/subject/subpopulation combos
+  #Finds overall district scaled median difference
+  dis.meds <- tapply(data[,subject], data[,dem], median, na.rm=TRUE)
+  dis.diff <- (dis.meds[lvl1] - dis.meds[lvl2])/
+    sd.table[sd.table[,"grade_level"]==grade,subject]
+  names(dis.diff) <- c("district")
+  
+  #Finds medians by school and demographic marker
+  school.meds <- tapply(data[,subject], 
+                        list(data$school_code, data[,dem]), 
+                        median, na.rm=TRUE)
+  
+  #Finds gaps and scales by standard deviation
+  differences <- (school.meds[,lvl1] - school.meds[,lvl2])/
+    sd.table[sd.table[,"grade_level"]==grade,subject]
+  differences <- c(differences, dis.diff) #include district-wide difference
+  
+  #Sorts the gaps, converts to dataframe, appends distrist median di  erence
+  differences <- differences[order(differences)]
+  med_diff_table <- data.frame(school_code = names(differences),
+                                 median_diff = differences)
+  rownames(med_diff_table) <- NULL
+  
+  #Prints table of differences
+  print(paste(labels[dem], ",difference of medians: ", 
+              lvl1, "-",lvl2))
+  print(paste("Grade:",grade,",",labels[subject]))
+  print(med_diff_table)
+  cat("\n\n")
+  
+  #Shows barplot of school median differences
+  barp <- ggplot(med_diff_table, aes(x= reorder(school_code, median_diff), 
+                                     y=median_diff))+  
+                geom_bar(position="dodge",stat="identity")+
+                scale_x_discrete(name = "School Code")+
+                scale_y_continuous(name = "Scaled Median Difference")+
+                ggtitle(paste("Grade",grade,labels[subject], 
+                              "Median Differences", labels[dem],
+                              "(",lvl1,"-",lvl2,")"))
+  #Print barplot
+  print(barp)
 
-} # End loop over demographic markers
+} # End loop over gap number
 
 ```
 
@@ -692,97 +551,84 @@ for(dem in dems){
 - Which is more important in this analysis: identifying the school with the lowest median scores for a student population or identifying the campuses with the largest number of students (of our target population) performing below a certain benchmark?
 - What types of interventions would be most useful for our target schools?
 
-**Analytic Technique:** To get a sense of where students from our target student populations are performing the worst overall, we will calculate the median reading test scores at each campus among LEP students and median math test scores at each campus among female students. Again, we choose the medians here because they are less susceptible to skew and outliers. We will visualize these medians with bar charts, and we will visualize the lowest peforming schools with comparative box plots.
+**Analytic Technique:** To get a sense of where students from our target student populations are performing the worst overall, we will calculate the median reading test scores at each campus among our underperforming population. Again, we choose the medians here because they are less susceptible to skew and outliers. We will visualize these medians with bar charts, and we will visualize the lowest peforming schools with comparative box plots.
 
 ```{r MedianTargets, echo=TRUE}
-# // Step 1: Initialize target populations, grade, and subject
-#Initialize demographic markers where you want to measure gaps
-dems <- c("male","lep")
-
-#Create lists of grade/subject/subpop combos where want to measure medians
-#For each demographic marker
-dem.male <- list( test1 = c(grade = 5, subject = "math_ss", group = "F"),
-                  test2 = c(grade = 8, subject = "math_ss", group = "F"))
-dem.lep  <- list( test1 = c(grade = 5, subject = "rdg_ss", group = 1),
-                  test2 = c(grade = 8, subject = "rdg_ss", group = 1))
-
-#Combine lists by demographic marker
-test.lists <- list(male = dem.male, lep = dem.lep)
-
-# // Step 2: Measure and sort medians by school
-#Loop over demographic marker
-for(dem in dems){
+# // Measure and sort medians by school
+#Loop over gap number in our table of gaps
+for(i in 1:n.gaps){
   
-  #Saves grade/subject lists for demographic marker
-  tests <- test.lists[[dem]]
+  #Save grade, subject tested, and demographic information
+  grade <- gaps[i,"grade_level"]
+  subject <- gaps[i,"outcome"]
+  dem <- gaps[i,"feature"]
   
-  #Loop over grade/subject/subpopulation combos
-  for(test in tests){
+  #Isolates underperforming group in gap
+  if(gaps[i,"grade_level"]>=0){
     
-    #Save grade, subject, and subpopulations
-    grade <- test["grade"][[1]]
-    subject <- test["subject"][[1]]
-    group <- test["group"][[1]]
+    #Target demographic is level 2 of comparison
+    target <- gaps[i,"level_2"]
     
-    data <- texas.data[texas.data$grade_level == grade,] #Isolates grade level
-    data <- data[data[,dem]== group, ] #Isolates subpopulation
+  }
+  
+  else{
+    #Target demographic is level 1 of comparison
+    target <- gaps[i,"level_1"]
     
-    #Finds overall district median
-    dis.med <- median(data[,subject])
-    names(dis.med) <- c("district")
+  }#End of conditional
+  
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  data = data[data[,dem] == target, ]#Isolates target demographic
     
-    #Finds medians by school and demographic marker
-    school.meds <- tapply(data[,subject], 
-                          data$school_code, 
-                          median, na.rm=TRUE)
-    school.meds <- c(school.meds, dis.med) #include district-wide median
-    
-    #Sorts the medians (smallest to largest), converts to dataframe
-    school.meds <- school.meds[order(school.meds)]
-    med_table <- data.frame(school_code = names(school.meds),
-                                   median = school.meds)
-    rownames(med_table) <- NULL
-    
-    #Prints table of medians
-    print(paste(labels[dem], group, " Medians"))
-    print(paste("Grade: ",grade,", ",labels[subject]))
-    print(med_table)
-    cat("\n\n")
-    
-    #Shows barplot of school medians
-    barp <- ggplot(med_table, aes(x= reorder(school_code, median), y=median)) +
-                  geom_bar(stat="identity")+
-                  geom_text(aes(label=round(median)), vjust=-0.25)+
-                  scale_x_discrete(name = "School Code")+
-                  scale_y_continuous(name = "Median Score")+
-                  ggtitle(paste("Grade",grade,labels[subject], 
-                                "Medians for", labels[dem],group,
-                                ", by School"))
-    
-    print(barp)
-    
-    #Isolate data for lowest 3 schools
-    low.schools <- as.character(med_table[1:3,"school_code"])
-    data$school_code <- as.character(data$school_code)
-    data.low <- subset(data, school_code == low.schools[1] | 
-                         school_code == low.schools[2] | 
-                         school_code == low.schools[3])
-    data.low$school_code <- factor(data.low$school_code, 
-                                   levels = low.schools,ordered=TRUE)
-    
-    #Show box plots of 3 lowest schools and district overall
-    boxp <- ggplot(data.low, aes(x=school_code , y=data.low[,subject])) +
-                  geom_boxplot() +
-                  geom_boxplot(data=data, aes(x = factor("district"), y = data[,subject]))+
-                  scale_x_discrete(limits = c(low.schools,"district"),
-                                   name="School Code")+
-                  scale_y_continuous(name=labels[subject])+
-                  ggtitle(paste("Lowest schools",labels[dem],group,",Grade",grade,labels[subject]))
-    print(boxp)
-    
-  } # End loop over grade/subject/subpopulation combos
+  #Finds overall district median
+  dis.med <- median(data[,subject])
+  names(dis.med) <- c("district")
+  
+  #Finds medians by school and demographic marker
+  school.meds <- tapply(data[,subject], 
+                        data$school_code, 
+                        median, na.rm=TRUE)
+  school.meds <- c(school.meds, dis.med) #include district-wide median
+  
+  #Sorts the medians (smallest to largest), converts to dataframe
+  school.meds <- school.meds[order(school.meds)]
+  med_table <- data.frame(school_code = names(school.meds),
+                                 median = school.meds)
+  rownames(med_table) <- NULL
+  
+  #Shows barplot of school medians
+  barp <- ggplot(med_table, aes(x= reorder(school_code, median), y=median)) +
+                geom_bar(stat="identity")+
+                geom_text(aes(label=round(median)), vjust=-0.25)+
+                scale_x_discrete(name = "School Code")+
+                scale_y_continuous(name = "Median Score")+
+                ggtitle(paste("Grade",grade,labels[subject], 
+                              "Medians for", labels[dem],target,
+                              ", by School"))
+  
+  print(barp)
+  
+  #Isolate data for lowest 3 schools
+  low.schools <- as.character(med_table[1:3,"school_code"])
+  data$school_code <- as.character(data$school_code)
+  data.low <- subset(data, school_code == low.schools[1] | 
+                       school_code == low.schools[2] | 
+                       school_code == low.schools[3])
+  data.low$school_code <- factor(data.low$school_code, 
+                                 levels = low.schools,ordered=TRUE)
+  
+  #Show box plots of 3 lowest schools and district overall
+  boxp <- ggplot(data.low, aes(x=school_code , y=data.low[,subject])) +
+                geom_boxplot() +
+                geom_boxplot(data=data, aes(x = factor("district"), y = data[,subject]))+
+                scale_x_discrete(limits = c(low.schools,"district"),
+                                 name="School Code")+
+                scale_y_continuous(name=labels[subject])+
+                ggtitle(paste("Lowest schools",labels[dem],
+                              target,",Grade",grade,labels[subject]))
+  print(boxp)
 
-} # End loop over demographic markers
+} # End loop over gap number
 
 ```
 
@@ -794,87 +640,76 @@ In this analysis, we will attempt to isolate the raw number of students at each 
 2) We will look at the number of target students at each campus who scored below the district-wide first quartile.
 
 ```{r RawNumberTargets, echo=TRUE}
-## // Step 1: Initialize target populations, grade, and subject
-##Initialize demographic markers where you want to measure gaps
-dems <- c("male","lep")
-#
-##Create lists of target grade/subject/subpop combos
-##For each demographic marker
-dem.male <- list( test1 = c(grade = 5, subject = "math_ss", group = "F"),
-                  test2 = c(grade = 8, subject = "math_ss", group = "F"))
-dem.lep  <- list( test1 = c(grade = 5, subject = "rdg_ss", group = 1),
-                  test2 = c(grade = 8, subject = "rdg_ss", group = 1))
-
-##Combine lists by demographic marker
-test.lists <- list(male = dem.male, lep = dem.lep)
-#
 ## // Step 2: Measure and visualize number of underperforming students by school
-##Loop over demographic marker
-for(dem in dems){
+# // Measure and sort medians by school
+#Loop over gap number in our table of gaps
+for(i in 1:n.gaps){
   
-  #Saves grade/subject lists for demographic marker
-  tests <- test.lists[[dem]]
+  #Save grade, subject tested, and demographic information
+  grade <- gaps[i,"grade_level"]
+  subject <- gaps[i,"outcome"]
+  dem <- gaps[i,"feature"]
   
-  #Loop over grade/subject/subpopulation combos
-  for(test in tests){
+  #Isolates underperforming group in gap
+  if(gaps[i,"grade_level"]>=0){
     
-    #Save grade, subject, and subpopulations
-    grade <- test["grade"][[1]]
-    subject <- test["subject"][[1]]
-    group <- test["group"][[1]]
+    #Target demographic is level 2 of comparison
+    target <- gaps[i,"level_2"]
     
-    data <- texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  }
+  
+  else{
     
-    #Calculates district median and first quartile scores for test
-    dist.median <- median(data[,subject]) #district median
-    dist.quant <- quantile(data[,subject])[["25%"]] #district first quartile
+    #Target demographic is level 1 of comparison
+    target <- gaps[i,"level_1"]
     
-    data <- data[data[,dem]== group, ] #Isolates subpopulation
-    data$below_med <- data[,subject] < dist.median #Adds indicator if below median
-    data$below_quant <- data[,subject] < dist.quant #Adds indicator if below first quartile
+  }#End of conditional
+  
+  #Isolates grade level
+  data = texas.data[texas.data$grade_level == grade,]
+  
+  #Calculates district median and first quartile scores for test
+  dist.median <- median(data[,subject]) #district median
+  dist.quant <- quantile(data[,subject])[["25%"]] #district first quartile
     
-    #Initialize vectors for a loop to get numbers below median and quartile and plot them
-    cuts <- c("below_med","below_quant")
-    cut.labels <- c("Below Median","Below First Quartile")
-    names(cut.labels) <- cuts
+  #Isolates target demographic
+  data = data[data[,dem] == target, ]#Isolates target demographi
+  data$below_med <- data[,subject] < dist.median #Adds indicator if below median
+  data$below_quant <- data[,subject] < dist.quant #Adds indicator if below first quartile
+  
+  #Initialize vectors for a loop to get numbers below median and quartile and plot them
+  cuts <- c("below_med","below_quant")
+  cut.labels <- c("Below Median","Below First Quartile")
+  names(cut.labels) <- cuts
+  
+  #Loop over median and quartile analysis
+  for(cut in cuts){
     
-    #Loop over median and quartile analysis
-    for(cut in cuts){
-      
-      #Finds number of students at each school below cut
-      school.data <- tapply(data[,cut], 
-                          data$school_code, 
-                          sum, na.rm=TRUE)
-      school.data <- school.data[order(school.data, decreasing=TRUE)] #sort descending order
-      school_table <- data.frame(school_code = names(school.data), #make into table
-                                     count = school.data)
-      rownames(school_table) <- NULL 
-      
-      #Prints table of counts for each school
-      print(paste(labels[dem], group,",", cut.labels[cut]))
-      print(paste("Grade: ",grade,", ",labels[subject]))
-      print(school_table)
-      cat("\n\n")
-      
-      #Shows barplot of number below cut by school
-      barp <- ggplot(school_table, aes(x= reorder(school_code, -count), y=count)) +
-                  geom_bar(stat="identity")+
-                  geom_text(aes(label=count, vjust=-0.25))+
-                  scale_x_discrete(name = "School Code")+
-                  scale_y_continuous(name = paste("Number of students",cut.labels[cut]))+
-                  ggtitle(paste("Grade",grade,labels[subject], 
-                                "Number of", labels[dem],group,
-                                "Students",cut.labels[cut],
-                                ", by School"))
+    #Finds number of students at each school below cut
+    school.data <- tapply(data[,cut], 
+                        data$school_code, 
+                        sum, na.rm=TRUE)
+    school.data <- school.data[order(school.data, decreasing=TRUE)] #sort descending order
+    school_table <- data.frame(school_code = names(school.data), #make into table
+                                   count = school.data)
+    rownames(school_table) <- NULL 
     
-      print(barp)
-      
-    } #End loop over cuts
+    #Shows barplot of number below cut by school
+    barp <- ggplot(school_table, aes(x= reorder(school_code, -count), y=count)) +
+                geom_bar(stat="identity")+
+                geom_text(aes(label=count, vjust=-0.25))+
+                scale_x_discrete(name = "School Code")+
+                scale_y_continuous(name = paste("Number of students",cut.labels[cut]))+
+                ggtitle(paste("Grade",grade,labels[subject], 
+                              "Number of", labels[dem],target,
+                              "Students",cut.labels[cut],
+                              ", by School"))
+  
+    print(barp)
     
-  } # End loop over grade/subject/subpopulation combos
-
-} # End loop over demographic markers
-
+  } #End loop over cuts
+  
+} # End loop over gap number
 ```
 
 ### Isolating effects of covariates
@@ -906,99 +741,137 @@ However, many undocumented students may be Limited English Proficient (LEP) lear
 - Can we draw causal estimates from this type of analysis, or is it only correlatoinal?
 - How do we best choose what controls we use in our equations?
 
-**Analytic Technique:** We will be using using linear regression. We choose linear regression because our outcome variable (scale scores on tests) is approximately continuous, and the technique will allow us to come up with our correlatoin estimates while controlling for various factors. Here, we will look at Black/White and Hispanic/White achievement gaps in 8th grade math, when controlling for economic disadvantage level and LEP level.
+**Analytic Technique:** We will be using using linear regression. We choose linear regression because our outcome variable (scale scores on tests) is approximately continuous, and the technique will allow us to come up with our correlatoin estimates while controlling for various factors. Note: the user will have to set the variable for which s/he would like to control. Many combinations are possible, and we make the following specific recommendations:
+
+- If analyzing race gaps, control for socioeconomic level
+- If analyzing gender gaps, control for race
+
+**Possible additions here**
 
 ```{r CoefficientAnalysis, echo=TRUE}
-# // Step 1: Isolate the grade level we want (8th grade here)
-data <- texas.data[texas.data$grade_level == 8,]
+# // Step 1: Isolate grade level
+control.1 <- "eco_dis"
+control.2 <- "lep"
 
-# // Step 2: Recode variables and create cluster variable
-data$race_ethnicity <- as.factor(data$race_ethnicity)
-data$race_ethnicity <- relevel(data$race_ethnicity, ref = "W")
-
-# // Step 3: Create a unique identifier for clustering standard errors 
-# at the school level
-data$cluster_var <- data$school_code 
-
-# Load the broom library to make working with model coefficients simple 
-# and uniform
-library(broom)
-
-# // Step 4: Estimate the unadjusted and adjusted differences in 8th grade math  
-# scores between Hispanic and white students and between black and white 
-# students 
-
-# Estimate unadjusted enrollment gap
-#  Fit the model
-mod1 <- lm(math_ss ~ race_ethnicity, data = data)
-#  Extract the coefficients
-betas_unadj <- tidy(mod1)
-#  Get the clustered variance-covariance matrix
-#  Use the get_CL_vcov function from the functions.R script
-clusterSE <- get_CL_vcov(mod1, data$cluster_var)
-#  Get the clustered standard errors and combine with the betas
-betas_unadj$std.error <- sqrt(diag(clusterSE))
-betas_unadj <- betas_unadj[, 1:3]
-#  Label
-betas_unadj$model <- "Unadjusted enrollment gap"
-
-# Estimate score gap adjusting for economic disadvantage level
-mod2 <- lm(math_ss ~ race_ethnicity + eco_dis, data = data)
-betas_adj_eco_dis <- tidy(mod2)
-clusterSE <- get_CL_vcov(mod2, data$cluster_var)
-betas_adj_eco_dis$std.error <- sqrt(diag(clusterSE))
-betas_adj_eco_dis <- betas_adj_eco_dis[, 1:3]
-betas_adj_eco_dis$model <- "Gap adjusted for econ disadvantage"
-
-# Estimate score gap adjusting for LEP status
-mod3 <- lm(math_ss ~ race_ethnicity + lep, data = data)
-betas_adj_lep <- tidy(mod3)
-clusterSE <- get_CL_vcov(mod3, data$cluster_var)
-betas_adj_lep$std.error <- sqrt(diag(clusterSE))
-betas_adj_lep <- betas_adj_lep[, 1:3]
-betas_adj_lep$model <- "Gap adjusted for LEP status"
-
-# Estimate score gap adjusting for economic disadvantage level and LEP status
-mod4 <- lm(math_ss ~ race_ethnicity + eco_dis + lep, 
-           data = data)
-betas_adj_ecodis_lep <- tidy(mod4)
-clusterSE <- get_CL_vcov(mod4, data$cluster_var)
-betas_adj_ecodis_lep$std.error <- sqrt(diag(clusterSE))
-betas_adj_ecodis_lep <- betas_adj_ecodis_lep[, 1:3]
-betas_adj_ecodis_lep$model <- "Gap adjusted for Eco_Dis level & LEP status"
-
-# // Step 5. Transform the regression coefficients to a data object for plotting
-chartData <- bind_rows(betas_unadj, betas_adj_eco_dis, betas_adj_lep, 
-                    betas_adj_ecodis_lep)
-
-# // Step 6. Plot
-
-#Set y-axis limits
-lim2 <- -(min(chartData[chartData$term == "race_ethnicityH", "estimate"])-1)
-lim1 <- -(max(chartData[chartData$term == "race_ethnicityH", "estimate"])+1)
-
-if(lim2 > 0 & lim1 > 0){
+#Loop over gap number in our table of gaps
+for(i in 1:n.gaps){
   
-  lim1 <- -1
-}
-
-if(lim2 < 0 & lim1 < 0){
+  #Save grade, subject tested, and demographic information
+  grade <- gaps[i,"grade_level"]
+  subject <- gaps[i,"outcome"]
+  dem <- gaps[i,"feature"]
   
-  lim2 <- 1
-}
-
-#Make barplot
-ggplot(chartData[chartData$term == "race_ethnicityH", ],
-       aes(x = model, y = -estimate, fill = model)) + 
-        geom_bar(stat = 'identity', color = I("black")) + 
-        scale_fill_brewer(type = "seq", palette = 8) +
-        geom_hline(yintercept = 0) + 
-        guides(fill = guide_legend("", keywidth = 6, nrow = 2)) + 
-        geom_text(aes(label = -estimate, vjust = -0.3)) +
-        scale_y_continuous(limit = c(lim1,lim2), name = "Scale Score") + 
-        theme_classic() + theme(legend.position = "bottom", axis.text.x = element_blank(), 
-                                axis.ticks.x = element_blank()) + 
-        labs(title = "Differences in 8th Grade Math Scores Between Latino and White Students", 
-             x = "")
-
+  #Isolates high performing group in gap
+  if(gaps[i,"grade_level"]>=0){
+    
+    #Reference demographic is level 1 of comparison, targe is level 2
+    ref.group <- gaps[i,"level_1"]
+    target <- gaps[i,"level_2"]
+    
+  }
+  
+  else{
+    
+    #Reference demographic is level 2 of comparison, target is level 1
+    ref.group <- gaps[i,"level_2"]
+    target <- gaps[i,"level_1"]
+    
+  }#End of conditional
+  
+  # // Step 2: Isolate grade level
+  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  
+  # // Step 3: Recode variables and create cluster variable
+  data[,dem] <- as.factor(data[,dem])
+  data[,dem] <- relevel(data[,dem], ref = ref.group)
+  
+  # // Step 4: Create a unique identifier for clustering standard errors 
+  # at the school level
+  data$cluster_var <- data$school_code 
+  
+  # Load the broom library to make working with model coefficients simple 
+  # and uniform
+  library(broom)
+  
+  # // Step 5: Estimate the unadjusted and adjusted differences in 8th grade math  
+  # scores between Hispanic and white students and between black and white 
+  # students 
+  
+  # Estimate unadjusted enrollment gap
+  #  Fit the model
+  mod1 <- lm(data[,subject] ~ data[,dem])
+  #  Extract the coefficients
+  betas_unadj <- tidy(mod1)
+  #  Get the clustered variance-covariance matrix
+  #  Use the get_CL_vcov function from the functions.R script
+  clusterSE <- get_CL_vcov(mod1, data$cluster_var)
+  #  Get the clustered standard errors and combine with the betas
+  betas_unadj$std.error <- sqrt(diag(clusterSE))
+  betas_unadj <- betas_unadj[, 1:3]
+  #  Label
+  betas_unadj$model <- "Unadjusted enrollment gap"
+  
+  # Estimate score gap adjusting for first control
+  mod2 <- lm(data[,subject] ~ data[,dem] + data[,control.1])
+  betas_adj_control_1 <- tidy(mod2)
+  clusterSE <- get_CL_vcov(mod2, data$cluster_var)
+  betas_adj_control_1$std.error <- sqrt(diag(clusterSE))
+  betas_adj_control_1 <- betas_adj_control_1[, 1:3]
+  betas_adj_control_1$model <- "Gap adjusted for econ disadvantage"
+  
+  # Estimate score gap adjusting for second control
+  mod3 <- lm(data[,subject] ~ data[,dem] + data[,control.2])
+  betas_adj_control_2 <- tidy(mod3)
+  clusterSE <- get_CL_vcov(mod3, data$cluster_var)
+  betas_adj_control_2$std.error <- sqrt(diag(clusterSE))
+  betas_adj_control_2 <- betas_adj_control_2[, 1:3]
+  betas_adj_control_2$model <- "Gap adjusted for LEP status"
+  
+  # Estimate score gap adjusting for both controls
+  mod4 <- lm(data[,subject] ~ data[,dem] + data[,control.1] + data[,control.2])
+  betas_adj_all <- tidy(mod4)
+  clusterSE <- get_CL_vcov(mod4, data$cluster_var)
+  betas_adj_all$std.error <- sqrt(diag(clusterSE))
+  betas_adj_all <- betas_adj_all[, 1:3]
+  betas_adj_all$model <- "Gap adjusted for Eco_Dis level & LEP status"
+  
+  # // Step 6. Transform the regression coefficients to a data object for plotting
+  chartData <- bind_rows(betas_unadj, betas_adj_control_1, betas_adj_control_2, 
+                      betas_adj_all)
+  
+  # // Step 7. Plot
+  
+  #Set y-axis limits
+  lim2 <- -(min(chartData[chartData$term == paste("data[, dem]",target,sep=""),"estimate"])-1)
+  lim1 <- -(max(chartData[chartData$term == paste("data[, dem]",target,sep=""), "estimate"])+1)
+  
+  if(lim2 > 0 & lim1 > 0){
+    
+    lim1 <- -1
+  }
+  
+  if(lim2 < 0 & lim1 < 0){
+    
+    lim2 <- 1
+  }
+  
+  #Make barplot
+  b <- ggplot(chartData[chartData$term == paste("data[, dem]",target,sep=""), ],
+         aes(x = model, y = -estimate, fill = model)) + 
+          geom_bar(stat = 'identity', color = I("black")) + 
+          scale_fill_brewer(type = "seq", palette = 8) +
+          geom_hline(yintercept = 0) + 
+          guides(fill = guide_legend("", keywidth = 6, nrow = 2)) + 
+          geom_text(aes(label = -estimate, vjust = -0.3)) +
+          scale_y_continuous(limit = c(lim1,lim2), name = "Scale Score") + 
+          theme_classic() + theme(legend.position = "bottom", axis.text.x = element_blank(), 
+                                  axis.ticks.x = element_blank()) + 
+          labs(title = paste("Differences in grade",grade,labels[subject],
+                             "between",labels[dem],target,"and",ref.group), 
+               x = "")
+  #Print
+  print(b)
+  
+}#End loop over gap number
 ```
+
