@@ -7,10 +7,12 @@ library(tidyverse)
 #grade = name of tested grade column in datasets (class: character)
 #outcome = name of outcome variable (usually test scores) in datasets (class: character)
 #features = vector of features in dataset where testing for gaps (class: character)
+#n = set 'n' largest gaps the function outputs at the end (class: integer)
 #sds (optional) = dataframe containing the standard deviations for all test (class: data frame)
 #cut (optional) = Minimum number of students of for level in a gap (class: integer)
+#med (optional) = Indicator if would like function to also output top standardized difference of medians (class: boolean)
 ##Begin function
-gap.test <- function(df, grade, outcome, features, sds = NULL, cut = NULL) {
+gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, cut = NULL, med = FALSE) {
   
   #See if no standard deviations provided
   if(is.null(sds)){
@@ -85,6 +87,12 @@ gap.test <- function(df, grade, outcome, features, sds = NULL, cut = NULL) {
   #Will store all calculated achievement gaps and effect sizes
   gaps <- vector()
   effects <- vector()
+  effects.level1 <- vector()
+  effects.level2 <- vector()
+  effects.f <- vector()
+  effects.gr <- vector()
+  effects.outcome <- vector()
+  mean_diffs <- vector()
   
   #Loop over grade levels
   for(gr in grades){
@@ -138,7 +146,11 @@ gap.test <- function(df, grade, outcome, features, sds = NULL, cut = NULL) {
         
         #Append gap to list and name in
         gaps <- append(gaps,gap,length(gaps))
-        names(gaps)[length(gaps)] <- paste(level1,"-",level2,feature,gr,outcome)
+        names(gaps)[length(gaps)] <- paste(level1,"-",level2,feature,'\n',gr,outcome)
+        
+        #Append mean difference to list
+        mean_diff <- mean(level1.data) - mean(level2.data)
+        mean_diffs <- append(mean_diffs, mean_diff, length(mean_diffs))
         
         #Measure the effect size (r)
         var.1 <- var(level1.data)
@@ -147,9 +159,14 @@ gap.test <- function(df, grade, outcome, features, sds = NULL, cut = NULL) {
         d <- (mean(level1.data) - mean(level2.data))/sd.pooled
         r <- d/sqrt(d^2+4)
         
-        #Append effect size to list and name
+        #Append effect size and information to lists and name
         effects <- append(effects,r,length(effects))
-        names(effects)[length(effects)] <- paste(level1,"-",level2,'\n',feature,gr,outcome)     
+        names(effects)[length(effects)] <- paste(level1,"-",level2,'\n',feature,gr,outcome)
+        effects.level1 <- append(effects.level1, level1, length(effects.level1))
+        effects.level2 <- append(effects.level2, level2, length(effects.level2))
+        effects.f <- append(effects.f, feature, length(effects.f))
+        effects.gr <- append(effects.gr, gr, length(effects.gr))
+        effects.outcome <- append(effects.outcome, outcome, length(effects.outcome))
         
         
       } #End loop over combinations
@@ -161,10 +178,12 @@ gap.test <- function(df, grade, outcome, features, sds = NULL, cut = NULL) {
   #Sort gaps and effect sizes largest to smallest in magnitude
   sorted.gaps <- gaps[order(abs(gaps), decreasing=TRUE)]
   effects.sorted <- effects[order(abs(effects), decreasing = TRUE)]
-  
-  #Prints 40 largest gaps and effect sizes
-  #print(sorted.gaps[1:40])
-  #print(effects.sorted[1:40])
+  effects.level1 <- effects.level1[order(abs(effects), decreasing = TRUE)]
+  effects.level2 <- effects.level2[order(abs(effects), decreasing = TRUE)]
+  effects.f <- effects.f[order(abs(effects), decreasing = TRUE)]
+  effects.gr <- effects.gr[order(abs(effects), decreasing = TRUE)]
+  effects.outcome <- effects.outcome[order(abs(effects), decreasing = TRUE)]
+  mean_diffs <- mean_diffs[order(abs(effects), decreasing = TRUE)]
   
   #Initialize
   effects.feature <-vector()
@@ -186,7 +205,7 @@ gap.test <- function(df, grade, outcome, features, sds = NULL, cut = NULL) {
       
     }#End loop over effect sizes
     
-    #Keep highest 35 effects (if applicable)
+    #Keep highest 20 effects (if applicable)
     if(length(effects.feature) > 20){
       effects.feature <- effects.feature[1:20]
     }
@@ -213,7 +232,7 @@ gap.test <- function(df, grade, outcome, features, sds = NULL, cut = NULL) {
     #Barplot for feature
     barp <- ggplot(dat.effects, aes(x= reorder(names, abs(effects.feature)), y=effects.feature)) +
       geom_bar(position="dodge",stat="identity")+
-      scale_x_discrete(name = "School Code")+
+      scale_x_discrete(name = "Comparison")+
       scale_y_continuous(name = "Effect Size", limits = c(limit1,limit2))+
       theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5, size=8))+
       geom_hline(yintercept=0.1, linetype="solid", 
@@ -229,19 +248,118 @@ gap.test <- function(df, grade, outcome, features, sds = NULL, cut = NULL) {
     
   }#End loop over features
   
+  
+  #Prints n largest gaps and meaning
+  #Standardized difference of medians
+  #Will only do this if user asks
+  if(med){
+
+    #Make into dataframe
+    plot.df.med <- data.frame(names <- names(sorted.gaps[1:n]),
+                              med.s.gaps <- sorted.gaps[1:n])
+    rownames(plot.df.med) <- NULL
+    
+    #Determine y-axis limits
+    if(min(plot.df.med$med.s.gaps) < -0.11){
+      limit1 <- min(plot.df.med$med.s.gaps)
+    }
+    else{
+      limit1 <- -.11
+    }
+    if(max(plot.df.med$med.s.gaps) > 0.11){
+      limit2 <- max(plot.df.med$med.s.gaps)
+    }
+    else{
+      limit2 <- .11
+    }
+    
+    #Barplot for standardized difference of medians
+    barp <- ggplot(plot.df.med, aes(x= reorder(names, abs(med.s.gaps)), y=med.s.gaps)) +
+      geom_bar(position="dodge",stat="identity")+
+      scale_x_discrete(name = "Comparison")+
+      scale_y_continuous(name = "Standardized median difference", limits = c(limit1,limit2))+
+      theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5, size=8))+
+      geom_hline(yintercept=0.1, linetype="solid", 
+                 color = "red", size=1)+
+      geom_hline(yintercept=-0.1, linetype="solid", 
+                 color = "red", size=1)+
+      geom_text(aes(y = med.s.gaps+.006*sign(med.s.gaps), label=round(med.s.gaps,5)), 
+                size=4.5)+
+      ggtitle(paste("Top",n,"standardized difference of medians, 
+                    Calculation: (Median.1 - Median.2)/standard.deviation"))
+    
+    print(barp)
+    
+  }#End conditional
+  
+  #Effect sizes
+  #Make into dataframe
+  plot.df.effect <- data.frame(names <- names(effects.sorted[1:n]),
+                            med.s.eff <- effects.sorted[1:n])
+  rownames(plot.df.effect) <- NULL
+  
+  
+  #Determine y-axis limits
+  if(min(plot.df.effect$med.s.eff) < -0.11){
+    limit1 <- min(plot.df.effect$med.s.eff)
+  }
+  else{
+    limit1 <- -.11
+  }
+  if(max(plot.df.effect$med.s.eff) > 0.11){
+    limit2 <- max(plot.df.effect$med.s.effs)
+  }
+  else{
+    limit2 <- .11
+  }
+  
+  #Barplot for effect sizes
+  barp <- ggplot(plot.df.effect, aes(x= reorder(names, abs(med.s.eff)), y=med.s.eff)) +
+    geom_bar(position="dodge",stat="identity")+
+    scale_x_discrete(name = "Comparison")+
+    scale_y_continuous(name = "Effect Size", limits = c(limit1,limit2))+
+    theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5, size=8))+
+    geom_hline(yintercept=0.1, linetype="solid", 
+               color = "red", size=1)+
+    geom_hline(yintercept=-0.1, linetype="solid", 
+               color = "red", size=1)+
+    geom_text(aes(label=round(med.s.eff,5)), 
+              vjust = -0.4, size=4.5)+
+    ggtitle(paste("Top",n,"effect sizes, 
+                  Calculation: d = mean difference/pooled sd; effect size = d/sqrt(d^2+4)"))
+  
+  print(barp)
+  
+  #Output a table of groups with largest effect sizes
+  output.table <- data.frame(level_1 = effects.level1[1:n],
+                             level_2 = effects.level2[1:n],
+                             feature = effects.f[1:n],
+                             grade_level = effects.gr[1:n],
+                             outcome = effects.outcome[1:n],
+                             effect_size = effects.sorted[1:n],
+                             mean_diff = mean_diffs[1:n])
+  
+  rownames(output.table) <- NULL
+  
+  print(effects.level1[1:n])
+  
+  #Return table of effect sizes
+  return(output.table)
+  
 }#End function
 
 
-#Download data to test function with and standard deviations
+##Download data to test function with and standard deviations
 #texas.datar<-read.csv("../data/synth_texas.csv")
 #standard.devsr <- read.csv("../data/sd_table.csv")
-#
+
 ##Function test
-#gap.test(df=texas.datar,
+#View(gap.test(df=texas.datar,
 #         grade="grade_level",
 #         outcome="rdg_ss",
 #         features=c('eco_dis','lep','iep','race_ethnicity','male'),
-#         cut = 60)
+#         cut = 60,
+#         med = TRUE))
 
 
 # R Function for Task 1
