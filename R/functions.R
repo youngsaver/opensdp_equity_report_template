@@ -2,7 +2,7 @@
 library(tidyverse)
 
 ###Explores dataset to find widest achievement gaps
-##Outputs list of 40 largest achievement gaps (computd by standardized mean difference)
+##Outputs list of largest largest achievement gaps (computd by effect size)
 #data = dataset to explore, should be wide format and have column for grade level (class: data frame)
 #grade = name of tested grade column in datasets (class: character)
 #outcome = name of outcome variable (usually test scores) in datasets (class: character)
@@ -339,6 +339,11 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, cut = NULL
                              effect_size = effects.sorted[1:n],
                              mean_diff = mean_diffs[1:n])
   
+  output.table$level_1 <- as.character(output.table$level_1)
+  output.table$level_2 <- as.character(output.table$level_2)
+  output.table$feature <- as.character(output.table$feature)
+  output.table$outcome <- as.character(output.table$outcome)
+  
   rownames(output.table) <- NULL
   
   #Return table of effect sizes
@@ -352,12 +357,12 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, cut = NULL
 #standard.devsr <- read.csv("../data/sd_table.csv")
 #
 ##Function test
-#View(gap.test(df=texas.datar,
+#a <- gap.test(df=texas.datar,
 #         grade="grade_level",
 #         outcome="rdg_ss",
 #         features=c('eco_dis','lep','iep','race_ethnicity','male'),
 #         cut = 60,
-#         med = TRUE))
+#         med = TRUE)
 
 
 # R Function for Task 1
