@@ -4,9 +4,9 @@ library(tidyverse)
 ###Explores dataset to find widest achievement gaps
 ##Outputs list of largest largest achievement gaps (computd by effect size)
 ##Prints visuals of largest achievement gaps
-#df = data, should be wide format (student level) and have column for grade level (class: data frame)
-#grade = name of tested grade column in datasets (class: character)
-#outcome = name of outcome variable (usually test scores) in datasets (class: character)
+#df = data, should be wide format, one row per student, and have column for grade level (class: data frame)
+#grade = name of tested grade column in dataset (class: character)
+#outcome = name of outcome variable (usually test scores) in dataset (class: character)
 #features = vector of features in dataset where testing for gaps (class: character)
 #n = set 'n' largest gaps the function outputs at the end (class: integer, default: 3)
 #sds (optional) = dataframe containing the standard deviations for all outcomes (class: data frame)
@@ -288,10 +288,6 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
       scale_x_discrete(name = "Comparison")+
       scale_y_continuous(name = "Standardized median difference", limits = c(limit1,limit2))+
       theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5, size=8))+
-      geom_hline(yintercept=0.1, linetype="solid", 
-                 color = "red", size=1)+
-      geom_hline(yintercept=-0.1, linetype="solid", 
-                 color = "red", size=1)+
       geom_text(aes(y = med.s.gaps+.006*sign(med.s.gaps), label=round(med.s.gaps,5)), 
                 size=4.5)+
       ggtitle(paste("Top",n,"standardized difference of medians, 
