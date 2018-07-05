@@ -57,8 +57,6 @@ Go to the Participate page to read about more ways to engage with the OpenSDP co
 
 The data used in this guide was synthetically generated, and it was formatted to match the Texas Education Agency's state test file formats (Texas's file formats can be found here: https://tea.texas.gov/student.assessment/datafileformats). The data has one record per student. Out of the hundreds of features reported for each student by the Texas Education Agency, we used (and retained) the following features in our analysis: student grade level (3-8), school code, student ID, gender, race-ethnicity, economic disadvantage level, Limited English Proficiency level, and scale scores in reading, math, and writing (for the STAAR state test). We also used indicators of whether or not the student attended a Title 1 school, was a migrant, and was enrolled in special education. Here is a key of the features and their variable names in our simulated dataset:
 
-The Texas Education Agency data files have hundreds of features attached to each student record. Coding our analyses with all of these features could get unwieldy, so the best practice is to select the key features we will need for our analyses. If you would like to directly use your own data with the code from this guide, it is best to delete unecessary features and change the headers to the feature names we chose. Below is a legend to the features we chose and how we named them. A more detailed data definition guide can be found in the `man` folder on the Github repository:
-
 | Feature name    | Feature Description                                 |
 |:-----------     |:------------------                                  |
 | `grade_level`   | Grade level of exam student took (3-8)              |
@@ -76,9 +74,11 @@ The Texas Education Agency data files have hundreds of features attached to each
 | `wrtg_ss`       | Scale score for writing exam                        |  
 | `composition`   | Score on writing composition exam                   |
 
-We will quantify the gaps according to the state-wide standard deviation for the year, test, and grade level in which the gap exists. Here is a table showing the distribution info (including standard deviation) for all the tests from 2014 (most state education agencies report something like this):
+The original Texas Education Agency data files have hundreds of features attached to each student record. Coding our analyses with all of these features could get unwieldy, so the best practice is to select the key features we will need for our analyses. If you would like to directly use your own data with the code from this guide, it is best to delete unecessary features and change the headers to the feature names we chose (above). A more detailed data definition guide can be found in the `man` folder in the Github repository.
 
-<img src="../img/staar_2014_dist.png" style="display: block; margin: 0 auto; height: 350px;">
+Although not required, it is useful to compile a small table of the standard deviations of the scores on the exams statewide, broken down by grade and subject area. This will allow us to compute more standardized measures of gaps in the following code. Here is an example of the expected table format, using standard deviations by grade and tested area from the 2014 Texas state STAAR exams:
+
+<img src="../img/sd_table.png" style="display: block; margin: 0 auto; height: 170px;">
 
 This data is used in the code, specifically imported into the `sd.table` variable.
 
@@ -107,7 +107,7 @@ source("../R/functions.R")
 # // Step 1: Read in csv file of our dataset, naming it "texas.data"
 texas.data <- read.csv("../data/synth_texas.csv")  
 
-# // Step 2: Read in file containing state-wide standard deviations for standardized tests
+# // Step 2 (Optional): Read in file containing state-wide standard deviations for standardized tests
 sd.table <- read.csv("../data/sd_table.csv")
 
 # // Step 3: Create a vector of labels for feature names in our dataset 
@@ -127,31 +127,9 @@ names(labels) <- c("grade_level","school_code","sid","male","race_ethnicity",
 ```
 
 
-```{r, cache=TRUE, message=FALSE, echo=FALSE}
-# Set the cache to true when using knitr to speed up future analyses
-#simouts <- simpop(nstu = 40000, seed = 8763434, 
-#                  control = sim_control(nschls = 12L, minyear=1996,
-#                                        n_postsec = 50L,
-#                                        n_cohorts = 3,
-#                                        maxyear=2017)) 
-#cgdata <- sdp_cleaner(simouts)
-```
-
-
 ### About the Analyses
 
-Especially in larger districts, students may have systematically differing educational outcomes in relation to their various identity markers (race, class, gender, English Language Learner status, etc.). These gaps often present themselves in standardized testing data, at the national, state, and local levels. The following analyses will assist your organization in seeing where gaps may exist and how wide they are, in order to spur and focus the conversation around why the gaps exist and what to do about them.
-
-### Sample Restrictions
-
-One of the most important decisions in running each analysis is defining the sample. 
-
-```{r setSampleRestrictions}
-# Read in global variables for sample restriction
-# Agency name
-#agency_name <- "Agency"
-
-```
+In various contexts, students of different identity markers (race, class, gender, English Language Learner status, etc.) may have systematically differing educational outcomes. These gaps often present themselves in standardized testing data, at the national, state, and local levels. The following analyses will assist your organization in seeing where gaps may exist and how wide they are, in order to spur and focus the conversation around why the gaps exist and what to do about them.
 
 ### Giving Feedback on this Guide
  
@@ -182,8 +160,7 @@ This guide is an open-source document hosted on Github and generated using R Mar
 **Ask Yourself**
 
 - How do different study subpopulations in your organization perform on standardized tests? How do they compare?
-- Why do these differences occur?
-- What differences do you want to explore further?
+- Which differences do you want to explore further?
 
 **Analytic Technique:** Identify major achievement gaps within your student population. To achieve this, we use the SDP function `gap.test`, which is defined in the repository's `R` folder. Here is the usage information:
 
@@ -193,15 +170,17 @@ Output: A `data.frame` table of the top `n` gaps, as measured by effect size, as
 
 Inputs:
 
-- data = dataset to explore, should be wide format and have column for grade level (class: data frame)
-- grade = name of tested grade column in datasets (class: character)
-- outcome = name of outcome variable (usually test scores) in datasets (class: character)
+`gap.test(df, grade, outcome, features, n = 3, sds = NULL, comp = FALSE, cut = NULL, med = FALSE)`
+
+- df = dataset, should be wide format, one row per student, and have column for grade level (class: data frame)
+- grade = name of tested grade column in dataset (class: character)
+- outcome = name of outcome variable (usually test scores) in dataset (class: character)
 - features = vector of features in dataset where testing for gaps (class: character)
 - n = Number of largest gaps the function outputs (class: integer, default: 3)
-- sds (optional) = dataframe containing the standard deviations for all test (class: data frame, default: NULL)
+- sds (optional) = dataframe containing the state-wide standard deviations for all outcomes/exams (class: data frame, default: NULL)
 - comp (optional) = Indicator to output additional comparative gap graphics (class: boolean, default: FALSE)
-- cut (optional) = Minimum number of students of for level in a gap (class: integer, default: NULL)
-- med (optional) = Indicator if would like function to also output top standardized difference of medians (class: boolean, default: FALSE)
+- cut (optional) = Minimum number of students for level in a gap (class: integer, default: NULL)
+- med (optional) = Indicator if would like function to also output standardized difference of medians, in addition to effect size (class: boolean, default: FALSE)
 
 More detailed usage information can be found in the `R` folder in the GitHub repository. We use the function here to find the top 3 gaps in math scores (in terms of effect size) between students of different economic disadvantage levels, races, genders, Special Education statuses, and LEP statuses. We check among all grades: 3-8. The number of top gaps shown can be changed based on user inputs, as well as the gap categories and subject areas measured.
 
@@ -218,13 +197,13 @@ gap.table <- gap.test(df=texas.data,
 
 ```
 
-The `gap.test` output shows us that the top 3 gaps are **Insert final gaps here**. The function also stores a table of each effect size, the mean difference (to show the gap on the scale of the test), and the demographic information of the gap (groups affected, grade level, test subject).
+The `gap.test` output shows us that the top 3 gaps are **Insert final gaps here**. The function also outputs a table of each effect size, the mean difference (to show the gap on the scale of the test), and the demographic information of the gap (groups affected, grade level, test subject).
 
-Measuring the gaps in terms of effect size allows us to compare gaps across grade levels and subject areas, as effect size standardizes the gap by taking into account the pooled standard deviation of the tested groups on the tests they took. A good rule  of thumb is that an effect size greater in magnitude than 0.1 usually means there is a large gap in student group performances. Hence, horizontal lines are labeled on the graph at 0.1 and -0.1. Gaps that surpass these thresholds should be looked at more thoroughly.
+Measuring the gaps in terms of effect size allows us to compare gaps across grade levels and subject areas, as effect size standardizes the gap by taking into account the pooled standard deviation of the tested groups on the tests they took. A good rule  of thumb is that an effect size greater in magnitude than 0.1 usually translates to large differences in effective classroom time. Hence, horizontal lines are labeled on the graph at 0.1 and -0.1. Gaps that surpass these thresholds should be looked at more thoroughly.
 
 One technical note: Sometimes the distibutions of tests scores could be skewed, making the median a more advantageous measure of central tendency (since it is less sensitive to outliers and skew). In these cases, set the `gap.test` function's `med` parameter to `TRUE` (as was done here) to output a plot that shows the top 3 gaps as measured by the standardized median difference.
 
-Since our largest effect size gap was **Insert here** we will explore that gap further. For demonstration purposes, we will focus on just that one gap here. However, the next chunk of code will determine which gap(s) will be explored in the rest of our analyses. The user can explore multipe gaps at once by setting the following variables to include multiple gaps from `gap.table`. This is shown in commented out code at the bottom of the chunk.
+Since our largest effect size gap was **Insert here** we will explore that gap further. For demonstration purposes, we will focus on just that one gap here. However, the next chunk of code will determine which gap(s) will be explored in the rest of our analyses. The user can explore multipe gaps at once by setting the following variables to include multiple gaps from `gap.table`. This is shown in commented out code in the middle of the chunk.
 
 ```{r SetGaps, echo=TRUE}
 # // Step 1: Choose to analyze just the largest gap
@@ -248,7 +227,7 @@ n.gaps <- 1
 
 ```
 
-**Analytic Technique:** Calculate the summary statistics for exam performance, for all students at the grade level(s) in which you measure gaps. 
+**Analytic Technique:** Calculate the summary statistics for exam performance, for all students at the grade level(s) in which you measure gaps. This will give us a few points of reference.
 
 ```{r Averages, echo=TRUE}
 #Print summary statistics for each gap's grade level
@@ -372,7 +351,7 @@ for(i in 1:n.gaps){
 } #End loop over gap number
 ```
 
-**Analytic Technique:** Often, it can be helpful to look at the intersections of the demographic data we pulled. In particular, exploring possible gaps among combinations of race, socioeconomic status, gender, and student label status (LEP, Spec Ed, Migrancy, etc.) can elucidate further achievement gaps in the data. Here, we will explore the intersection of socioeconomic status (measured by economic disadvantage) and the gap we are measuring, by measuring that gap within each level of socioeconomic statsu in our data. The user can change the comparison from socioeconomic status to another factor by manipulating the `group.by` variable.
+**Analytic Technique:** Often, it can be helpful to look at the intersections of the demographic data we pulled. In particular, exploring possible gaps among combinations of race, socioeconomic status, gender, and student label status (LEP, Spec Ed, Migrancy, etc.) can elucidate further achievement gaps in the data. Here, we will explore the intersection of socioeconomic status (measured by economic disadvantage) and the gap we are measuring, by measuring that gap within each level of socioeconomic status in our data. The user can change the comparison from socioeconomic status to another factor by manipulating the `group.by` variable.
 
 We perform this through descriptive statistics and data visuals:
 
@@ -442,7 +421,7 @@ for(i in 1:n.gaps){
 
 ### Comparing gaps at schools
 
-**Purpose:** When you already have a sense of where the gaps exist throughout the district, it can be useful to pinpoint at which schools the gap is most exaggerated and at which schools the gap is most narrow. Identifying these schools can lead to further analyses to investigate why these variations exists, possibly informing school and district policy. 
+**Purpose:** When you already have a sense of which gaps are greatest in magnitude throughout the dataset, it can be useful to pinpoint at which schools the gap is most exaggerated (and at which schools the gap is most narrow). Identifying these schools can lead to further investigation, providing context as to why these variations exist. 
 
 **Required Analysis File Variables:**
 
@@ -462,10 +441,12 @@ for(i in 1:n.gaps){
 
 **Ask Yourself**
 
-- Where are the gaps most exaggerated? Where are the gaps narrowest?
-- What further analyses could we do to investigate the reasons behind gap variation at different schools?
+- At what schools are the gaps most exaggerated? At what schools are the gaps most narrow?
+- What further analyses could we perform to investigate the reasons behind gap variation at different schools?
 
-**Analytic Technique:** We will be calculating achievement gaps using median scores on state tests for our subpopulations. We have decided to use medians, rather than means, because the distributions for our test scores (as shown in the histograms above) tend to be skewed left or right. With such skew, means can often be inflated or deflated due to outliers. Medians, which are less sensitive to skew, are often more effective measures of central tendency in such cases. We will calculate and compared the standardized median differences within schools.
+**Analytic Technique:** We will be calculating achievement gaps using median scores on state tests for our subpopulations. We have decided to use medians, rather than means, because the distributions for our test scores (as shown in the histograms above) tend to be skewed left or right. With such skew, means can often be inflated or deflated due to outliers. Medians, which are less sensitive to skew, are often more effective measures of central tendency in such cases. We will calculate and compare the standardized median differences within schools. 
+
+Note: we standardize the median differences here by utilizing the state standard deviations on these exams (stored in `sd.table`). If these standard deviations are not available, as a stand-in, you can calculate the standard deviation within the dataset you provide. There is commented out code within the chunk that you can activate to complete this task.
 
 ```{r SchoolGaps, echo=TRUE}
 # // Measure and sort standardized median differences by school
@@ -480,6 +461,7 @@ for(i in 1:n.gaps){
   lvl2 <- gaps[i,"level_2"]
   
   data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  sd.within <- sd(data[,subject]) #Stores standard deviation for subject and grade level
   data = data[data[,dem] == lvl1 | data[,dem] == lvl2, ]#Isolates demographic groups
     
   #Finds overall district scaled median difference
@@ -487,6 +469,12 @@ for(i in 1:n.gaps){
   dis.diff <- (dis.meds[lvl1] - dis.meds[lvl2])/
     sd.table[sd.table[,"grade_level"]==grade,subject]
   names(dis.diff) <- c("district")
+  
+  ##If no state standard deviation available, use this code instead,
+  ##To find gaps and scales by by standard deviation 
+  #dis.meds <- tapply(data[,subject], data[,dem], median, na.rm=TRUE)
+  #dis.diff <- (dis.meds[lvl1] - dis.meds[lvl2])/sd.within
+  #names(dis.diff) <- c("district")
   
   #Finds medians by school and demographic marker
   school.meds <- tapply(data[,subject], 
@@ -497,6 +485,11 @@ for(i in 1:n.gaps){
   differences <- (school.meds[,lvl1] - school.meds[,lvl2])/
     sd.table[sd.table[,"grade_level"]==grade,subject]
   differences <- c(differences, dis.diff) #include district-wide difference
+  
+  ##If no state standard deviation available, use this code instead,
+  ##To find gaps and scales by by standard deviation 
+  #differences <- (school.meds[,lvl1] - school.meds[,lvl2])/sd.within
+  #differences <- c(differences, dis.diff) #include district-wide difference
   
   #Sorts the gaps, converts to dataframe, appends distrist median di  erence
   differences <- differences[order(differences)]
@@ -529,7 +522,7 @@ for(i in 1:n.gaps){
 
 ### Identifying Target Schools
 
-**Purpose:** As a district leader or policymaker, the next step is to identify which campuses have the most underperforming students for the student populations in which we see the largest gaps district-wide. Those schools would be the ones to target with direct or indirect interventions, in order to fastest close the gap for the district overall.
+**Purpose:** Policymakers may propose interventions to work towards closing these gaps. Such interventions generally target the underperforming student population and attempt to raise them up (through special programming, extra supports, or other methods) to the level of their peers. With limited resources, policymakers may have to choose which schools will immediately receive the intervention and which schools will not. The following analyses can be used to inform that decision.
 
 **Required Analysis File Variables:**
 
@@ -549,10 +542,10 @@ for(i in 1:n.gaps){
 
 **Ask Yourself**
 
-- Which is more important in this analysis: identifying the school with the lowest median scores for a student population or identifying the campuses with the largest number of students (of our target population) performing below a certain benchmark?
+- Which is more important in this decision-making process: identifying the school with the lowest median scores for a student population or identifying the campuses with the largest number of students (of our target population) performing below a certain benchmark?
 - What types of interventions would be most useful for our target schools?
 
-**Analytic Technique:** To get a sense of where students from our target student populations are performing the worst overall, we will calculate the median reading test scores at each campus among our underperforming population. Again, we choose the medians here because they are less susceptible to skew and outliers. We will visualize these medians with bar charts, and we will visualize the lowest peforming schools with comparative box plots.
+**Analytic Technique:** To get a sense of where students from our target student populations are performing relatively poorly (compared to their counterparts at other schools), we will calculate the median reading test scores at each campus among our underperforming population. Again, we choose the medians here because they are less susceptible to skew and outliers. We will visualize these medians with bar charts, and we will visualize the lowest peforming schools with comparative box plots.
 
 ```{r MedianTargets, echo=TRUE}
 # // Measure and sort medians by school
@@ -634,7 +627,7 @@ for(i in 1:n.gaps){
 ```
 
 
-**Analytic Technique:** Although useful for getting an overall picture, looking at medians alone may not be the most effective way to identify target schools. Given that districts have limited resources, it may also be useful to take school size into account. For example, a small school may have the worst median LEP performance in your district. However, it could be more efficient to target a larger school with slightly higher median performance scores if that school has more low-performing LEP students overall. At the larger school, in theory, a new intervention effort could reach a greater number of lower-performing LEP students than at the smaller school. Of course, if this technique is used in isolation, it has the potential downside of consistently preferencing resources towards larger schools. The result could be perceived favoritism or discrimination. Therefore, this analysis should provide just one among several considerations when picking target schools.
+**Analytic Technique:** Although useful for getting an overall picture, looking at medians alone may not be the most effective way to identify target schools. Given that districts have limited resources, it may also be useful to take school size into account. For example, a small school may have the worst median Limited English Proficient (LEP) student performance in your district. However, it could be more efficient to target a larger school with slightly higher median performance scores if that school has more low-performing LEP students overall. At the larger school, in theory, a new intervention effort could reach a greater number of lower-performing LEP students than at the smaller school. Of course, if this technique is used in isolation, it has the potential downside of preferencing resources towards larger schools. The result could be perceived favoritism or discrimination. Therefore, this analysis should provide just one among several considerations when picking target schools.
 
 In this analysis, we will attempt to isolate the raw number of students at each school in our target populations who are "under-performing". We will do this in two ways: 
 1) We will look at the number of target students in each campus who scored below the district-wide median.
