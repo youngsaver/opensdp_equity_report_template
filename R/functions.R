@@ -3,15 +3,16 @@ library(tidyverse)
 
 ###Explores dataset to find widest achievement gaps
 ##Outputs list of largest largest achievement gaps (computd by effect size)
-#data = dataset to explore, should be wide format and have column for grade level (class: data frame)
+##Prints visuals of largest achievement gaps
+#df = data, should be wide format (student level) and have column for grade level (class: data frame)
 #grade = name of tested grade column in datasets (class: character)
 #outcome = name of outcome variable (usually test scores) in datasets (class: character)
 #features = vector of features in dataset where testing for gaps (class: character)
-#n = set 'n' largest gaps the function outputs at the end (class: integer)
-#sds (optional) = dataframe containing the standard deviations for all test (class: data frame)
+#n = set 'n' largest gaps the function outputs at the end (class: integer, default: 3)
+#sds (optional) = dataframe containing the standard deviations for all outcomes (class: data frame)
 #comp (optional) = Indicator to output additional comparative gap graphics (class: boolean, default: FALSE)
-#cut (optional) = Minimum number of students of for level in a gap (class: integer)
-#med (optional) = Indicator if would like function to also output top standardized difference of medians (class: boolean)
+#cut (optional) = Minimum number of students for level in a gap (class: integer)
+#med (optional) = Indicator if would like function to also output top standardized difference of medians (class: boolean, default: FALSE)
 ##Begin function
 gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FALSE, 
                      cut = NULL, med = FALSE) {
@@ -22,7 +23,7 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
     
     #Notify user
     message("No standard deviations provided. 
-            Will use calculated standard deviations in prvoided dataset.")
+            Will use standard deviations calculated from prvoided dataset.")
     
     #Find standard deviation for each grade
     sds.by.grades <- tapply(df[,outcome], df[,grade],sd)
@@ -42,6 +43,7 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
      !any(colnames(sds)==outcome) |
      dim(sds)[1] > 20 ) {
     
+    #Make example sd dataframe
     ex.sds <- data.frame(grade_level = c(3,4,5,6,7,8),
                          math_ss = c(148.22,145.65,143.06,145.00,128.79,121.22),
                          rdg_ss = c(132.00,127.53,128.76,123.57,120.79,124.79),
@@ -63,6 +65,7 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
   if(class(sds[,grade]) != 'integer' | 
     class(sds[,outcome]) != 'numeric') {
       
+      #Make example dataframe of sds
       ex.sds <- data.frame(grade_level = c(3,4,5,6,7,8),
                            math_ss = c(148.22,145.65,143.06,145.00,128.79,121.22),
                            rdg_ss = c(132.00,127.53,128.76,123.57,120.79,124.79),
@@ -187,7 +190,7 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
   effects.outcome <- effects.outcome[order(abs(effects), decreasing = TRUE)]
   mean_diffs <- mean_diffs[order(abs(effects), decreasing = TRUE)]
   
-  #If want to show gaps by feature, will make and show plots
+  ##If want to show gaps by feature, will make and show plots
   if(comp){
     
     #Initialize
@@ -298,7 +301,7 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
     
   }#End conditional
   
-  #Effect sizes
+  ##Visualize top 'n' effect sizes
   #Make into dataframe
   plot.df.effect <- data.frame(names <- names(effects.sorted[1:n]),
                             med.s.eff <- effects.sorted[1:n])
@@ -358,21 +361,6 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
 }#End function
 
 
-##Download data to test function with and standard deviations
-#texas.datar<-read.csv("../data/synth_texas.csv")
-#standard.devsr <- read.csv("../data/sd_table.csv")
-#
-##Function test
-#a <- gap.test(df=texas.datar,
-#         grade="grade_level",
-#         outcome="math_ss",
-#         features=c('eco_dis','lep','iep','race_ethnicity','male'),
-#         cut = 60,
-#         sds = standard.devsr,
-#         med = TRUE)
-
-
-# R Function for Task 1
 # Derive the mode in a stata friendly fashion
 statamode <- function(x) {
   z <- table(as.vector(x))
