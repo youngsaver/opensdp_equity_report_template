@@ -1,8 +1,8 @@
 {
-    "path" : "C:/Users/Jared/GitHub/opensdp_equity_report_template/man",
+    "path" : "C:/Users/Jared/GitHub/opensdp_equity_report_template",
     "sortOrder" : [
         {
-            "ascending" : true,
+            "ascending" : false,
             "columnIndex" : 2
         }
     ]

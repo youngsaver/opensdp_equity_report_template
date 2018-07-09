@@ -45,13 +45,21 @@ library(stringr)
 assess_adj <- sim_control()$assessment_adjustment
 
 # Make scores spread out more
-assess_adj$perturb_base <- 
-  function (x, sd) 
+assess_adj$perturb_base <- function(x, sd) 
   {
     mean_shift <- rnorm(1, sd = 3)
     y <- x + rnorm(1, mean_shift, sd * 0.8)
     return(y)
   }
+
+assess_adj$gender_list <- list("Male" = 0.5, 
+                    "Female" = -0.5)
+
+assess_adj$frl_list <- list("0" = 0.3, 
+                            "1" = -0.1)
+
+# Downadjust the IEP difference
+
 
 # Get defaults
 assess_sim_par <- OpenSDPsynthR::sim_control()$assess_sim_par
@@ -59,6 +67,12 @@ assess_sim_par <- OpenSDPsynthR::sim_control()$assess_sim_par
 assess_sim_par$error_var <- 15
 # Increase coefficient effects
 assess_sim_par$fixed_param <- assess_sim_par$fixed_param * 10
+# Downgrade IEP difference
+assess_sim_par$fixed_param[4] <- -0.75
+# Downgrade LEP difference
+assess_sim_par$fixed_param[5] <- -1
+assess_sim_par$fixed_param[6] <- -0.05
+assess_sim_par$fixed_param[7] <- 1
 assess_sim_par$lvl1_err_params$mean <- 1
 assess_sim_par$lvl1_err_params$sd <- 10
 # Set group level variances
@@ -76,7 +90,7 @@ stu_pop <- simpop(5000L, seed = 0525212,
 #
 out_data <- dplyr::left_join(stu_pop$stu_assess, stu_pop$stu_year)
 #
-out_data <- out_data %>% select(-exit_type, -cohort_grad_year, - cohort_year, -enrollment_status, 
+out_data <- out_data %>% select(-exit_type, -cohort_grad_year, -cohort_year, -enrollment_status, 
                                 -grade_enrolled, -grade_advance, -ndays_attend, 
                                 -ndays_possible)
 out_data <- left_join(out_data, stu_pop$demog_master %>% 
@@ -85,7 +99,7 @@ out_data <- left_join(out_data, stu_pop$demog_master %>%
 out_data <- as.data.frame(out_data)
 
 # Get sample model output to check relationships among variables
-summary(lm(math_ss~rdg_ss + grade + frpl + ell + iep + gifted, data = out_data))
+summary(lm(math_ss~rdg_ss + grade + frpl + ell + iep + Sex +  gifted, data = out_data))
 
 # Perturb by student to give student scores dependence on an unobserved student 
 # talent - too deterministic still
@@ -98,7 +112,7 @@ out_data <- out_data %>% group_by(sid) %>%
   ungroup %>% 
   mutate(rdg_ss = rdg_ss + coef_t*talent + coef_a * age + 3*age + rnorm(1, 25, 10), 
          math_ss = coef_z*rdg_ss + coef_tb*talent + 3*age + coef_a*age + rnorm(1, 25, 10)) %>% 
-  select(-coef_t, -coef_tb, -coef_z, -coef_a,- talent) %>% ungroup %>% as.data.frame
+  select(-coef_t, -coef_tb, -coef_z, -coef_a,-talent) %>% ungroup %>% as.data.frame
 
 # Fill in missing variables
 out_data$migrant <- NA
@@ -144,19 +158,19 @@ match_distr <- function(source, target){
 #   select(math_ss) %>% pull
 # zz <- match_distr(source = source, target = plotdf)
 
-for(j in c("math", "rdg")){
-  for(i in c(3:8)){
-    if(j == "math"){
+for (j in c("math", "rdg")) {
+  for (i in c(3:8)) {
+    if (j == "math") {
       export$math_ss[out_data$grade == i] <- 
         match_distr(source = out_data$math_ss[export$grade == i], 
                     target = assess_distr[assess_distr$subject == j & 
                                             assess_distr$grade == i,])
-    } else if (j == "rdg"){
+    } else if (j == "rdg") {
       export$rdg_ss[out_data$grade == i] <- 
         match_distr(source = out_data$math_ss[export$grade == i], 
                     target = assess_distr[assess_distr$subject == j & 
                                             assess_distr$grade == i,])
-    } else if (j == "wrtg"){
+    } else if (j == "wrtg") {
       export$wrtg_ss[out_data$grade == i] <- 
         match_distr(source = out_data$math_ss[export$grade == i], 
                     target = assess_distr[assess_distr$subject == j & 
@@ -190,6 +204,19 @@ export$male %<>% as.character %>% substr(1, 1)
 export$lep %<>% as.numeric
 # econ_dis = 1/0
 export$eco_dis %<>% as.numeric
+
+### Better match Texas data
+# Reform SES variable with additional levels
+table(export$eco_dis)
+export$eco_dis <- sapply(export$eco_dis, 
+                         function(x) ifelse(runif(1) > 0.95, 9, x))
+table(export$eco_dis)
+export$eco_dis <- sapply(export$eco_dis, 
+                         function(x) ifelse(x == 1 & runif(1) > 0.75, 2, x))
+table(export$eco_dis)
+
+# Check final model 
+summary(lm(math_ss ~ grade_level +  factor(eco_dis) + lep + male + iep, data = export))
 
 
 # Save

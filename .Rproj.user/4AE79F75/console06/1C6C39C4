@@ -28,4 +28,57 @@ data/synth_texas.rda[0K
 [0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$[0K[74G[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[?25hi[0Kt[0K[78G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git p[0K[?25hu[0Ks[0Kh[0K[83G[82G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git pus[0K[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git pu[0K[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git p[0K[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git[0K[78G[?25h[77G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ gi[0K[77G[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[76G[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$[0K[75G[?25h[74G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[?25hi[0Kt[0K[78G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git r[0K[?25he[0K[?25ls[0K[80G[?25h[81G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git rese[0K[?25ht[0K[?25l
 Unstaged changes after reset:[0K
 M       .Rproj.user/4AE79F75/console06/1C6C39C4[0K
-[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$[0K[74G[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[?25hi[0Kt[0K[78G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git a[0K[?25hd[0Kd[0K[82G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git add -[0K[?25hA[0K
+[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$[0K[74G[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[?25hi[0Kt[0K[78G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git a[0K[?25hd[0Kd[0K[82G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git add -[0K[?25hA[0K[?25l
+[0K[?25h[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$[0K[74G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[?25hi[0Kt[0K[78G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git c[0K[?25ho[0Km[0Km[0K[?25li[0K[82G[?25h[83G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git commit[0K[?25h[85G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git commit -[0K[?25h[0Km[?25l
+[0K[?25h[2G[?25l "[0K[?25hd[0Ka[0K[?25lt[0K[5G[?25h[6G[?25l "data[0K[?25h[8G[?25l "data f[0K[?25hi[0Kx[0Ke[0Ks[0K"[0K[?25l
+[0K[?25h[master df86c12] data fixes[0K[?25l
+ 2 files changed, 28 insertions(+), 1 deletion(-)[0K
+ create mode 100644 .gitignore[0K
+[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$[0K[74G[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[?25hi[0Kt[0K[78G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git p[0K[?25hu[0Ks[0Kh[0K[83G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git push o[0K[?25hr[0Ki[0K[0Kg[?25l
+[0K[?25hi[0Kn[0K[4G[?25lin m[0K[?25ha[0Ks[0Kt[0Ke[0Kr[0K[?25l
+[0K[?25hEnter passphrase for key '/home/jared/.ssh/id_rsa':[0K[53G[?25l
+[0K[?25hCounting objects: 37, done.[0K[?25l
+[0K[?25hDelta compression using up to 16 threads.[0K[?25l
+Compressing objects:  26% (8/30)[0K[1G[?25h[?25lCompressing objects:  53% (16/30)[0K[1G[?25hCompressing objects: 100% (30/30), done.[0K[?25l
+Writing objects:  78% (29/37)[0K[1G[?25hWriting objects: 100% (37/37), 710.42 KiB | 0 bytes/s, done.[0K[?25l
+Total 37 (delta 4), reused 0 (delta 0)[0K
+[0K[?25h[?25lremote: Resolving deltas:   0% (0/4)[0K[1G[?25hremote: Resolving deltas: 100% (4/4), done.[0K[?25l
+[0K[?25hTo git@github.com:youngsaver/opensdp_equity_report_template.git[0K[?25l
+   fcb7216..df86c12  master -> master[0K
+]0;jared@Legendre: /mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$[0K[74G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[?25hi[0Kt[0K[78G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git p[0K[?25h[?25lu[0K[79G[?25h[80G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git pul[0K[?25hl[0K[83G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git pull o[0K[?25hr[0Ki[0Kg[0Ki[0Kn[0K[90G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git pull origin m[0K[?25h[?25la[0K[91G[?25h[92G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git pull origin mas[0K[?25ht[0Ke[0Kr[0K[?25l
+[0K[?25hEnter passphrase for key '/home/jared/.ssh/id_rsa':[0K[53G[?25l
+[0K[?25hremote: Counting objects: 16, done.[0K[?25l
+remote: Compressing objects: 100% (12/12), done.[0K
+remote: Total 16 (delta 7), reused 0 (delta 0), pack-reused 0[0K
+Unpacking objects:  12% (2/16)[0K[1G[?25h[?25lUnpacking objects:  43% (7/16)[0K[1G[?25h[?25lUnpacking objects:  93% (15/16)[0K[1G[?25hUnpacking objects: 100% (16/16), done.[0K[?25l
+[0K[?25hFrom github.com:youngsaver/opensdp_equity_report_template[0K[?25l
+ * branch            master     -> FETCH_HEAD[0K
+[0K[?25h   df86c12..f6ec342  master     -> origin/master[0K[?25l
+[0K[?25hUpdating df86c12..f6ec342[0K[?25l
+[0K[?25hFast-forward[0K[?25l
+ R/functions.R              | 162 [0;32m++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[0;31m-[0m[0K
+ code/texas_equity_code.Rmd |  34 [0;32m++++++++++[0;31m----[0m[0K
+ 2 files changed, 186 insertions(+), 10 deletions(-)[0K
+]0;jared@Legendre: /mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$[0K[74G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[74G[?25h[75G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ gi[0K[?25ht[0K[78G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git p[0K[?25h[?25lu[0K[79G[?25h[80G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git pul[0K[?25hl[0K[83G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git pull o[0K[83G[?25h[84G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git pull or[0K[?25hi[0Kg[0Ki[0Kn[0K[90G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git pull origin m[0K[?25ha[0Ks[0Kt[0Ke[0Kr[0K[?25l
+[0K[?25hEnter passphrase for key '/home/jared/.ssh/id_rsa':[0K[53G[?25l
+[0K[?25hremote: Counting objects: 75, done.[0K[?25l
+remote: Compressing objects:  16% (10/60)[0K[1G[?25hremote: Compressing objects: 100% (60/60), done.[0K[?25l
+remote: Total 75 (delta 35), reused 1 (delta 0), pack-reused 0[0K
+Unpacking objects:   4% (3/75)[0K[1G[?25h[?25lUnpacking objects:  13% (10/75)[0K[1G[?25h[?25lUnpacking objects:  24% (18/75)[0K[1G[?25h[?25lUnpacking objects:  34% (26/75)[0K[1G[?25h[?25lUnpacking objects:  41% (31/75)[0K[1G[?25h[?25lUnpacking objects:  50% (38/75)[0K[1G[?25h[?25lUnpacking objects:  64% (48/75)[0K[1G[?25h[?25lUnpacking objects:  70% (53/75)[0K[1G[?25h[?25lUnpacking objects:  81% (61/75)[0K[1G[?25h[?25lUnpacking objects:  89% (67/75)[0K[1G[?25h[?25lUnpacking objects:  92% (69/75)[0K[1G[?25hUnpacking objects: 100% (75/75), done.[0K[?25l
+[0K[?25hFrom github.com:youngsaver/opensdp_equity_report_template[0K[?25l
+ * branch            master     -> FETCH_HEAD[0K
+   f6ec342..8856403  master     -> origin/master[0K
+[0K[?25hUpdating f6ec342..8856403[0K[?25l
+[0K[?25hFast-forward[0K[?25l
+ R/functions.R                               |  329 [0;32m++++++++++[0;31m---[0m[0K
+ README.md                                   |   19 [0;32m+[0;31m-[0m[0K
+ code/texas_equity_code.Rmd                  | 1217 [0;32m+++++++++++++++++++++[0;31m--------------------------[0m[0K
+ data/sd_table.csv                           |    7 [0;32m+[0m[0K
+ img/sd_table.png                            |  Bin [0;31m0[0m -> [0;32m9076[0m bytes[0K
+ img/staar_2014_dist.PNG                     |  Bin [0;31m170963[0m -> [0;32m0[0m bytes[0K
+ man/texas_data_features/data_definitions.md |   12 [0;32m+[0;31m-[0m[0K
+ 7 files changed, 836 insertions(+), 748 deletions(-)[0K
+ create mode 100644 data/sd_table.csv[0K
+ create mode 100644 img/sd_table.png[0K
+ delete mode 100644 img/staar_2014_dist.PNG[0K
+[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$[0K[74G[?25h[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ g[0K[?25h[?25li[0K[75G[?25h[76G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git[0K[76G[?25h[77G[78G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git a[0K[?25hd[0Kd[0K[82G[?25l[0;32;92mjared@Legendre[0m:[0;34;94m/mnt/c/Users/Jared/GitHub/opensdp_equity_report_template[0m$ git add -[0K[?25h[?25lA[0K[83G[?25h[84G
