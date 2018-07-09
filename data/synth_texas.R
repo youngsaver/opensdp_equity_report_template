@@ -52,10 +52,10 @@ assess_adj$perturb_base <- function(x, sd)
     return(y)
   }
 
-assess_adj$gender_list <- list("Male" = 0.5, 
-                    "Female" = -0.5)
+assess_adj$gender_list <- list("Male" = 3, 
+                    "Female" = -3)
 
-assess_adj$frl_list <- list("0" = 0.3, 
+assess_adj$frl_list <- list("0" = 0.05, 
                             "1" = -0.1)
 
 # Downadjust the IEP difference
@@ -71,7 +71,7 @@ assess_sim_par$fixed_param <- assess_sim_par$fixed_param * 10
 assess_sim_par$fixed_param[4] <- -0.75
 # Downgrade LEP difference
 assess_sim_par$fixed_param[5] <- -1
-assess_sim_par$fixed_param[6] <- -0.05
+assess_sim_par$fixed_param[6] <- 0
 assess_sim_par$fixed_param[7] <- 1
 assess_sim_par$lvl1_err_params$mean <- 1
 assess_sim_par$lvl1_err_params$sd <- 10
