@@ -215,6 +215,13 @@ export$eco_dis <- sapply(export$eco_dis,
                          function(x) ifelse(x == 1 & runif(1) > 0.75, 2, x))
 table(export$eco_dis)
 
+## Brute force gender gap
+
+export %<>% group_by(grade_level) %>% 
+  mutate(math_ss = ifelse(male == "M", math_ss + (0.2 * sd(math_ss)), 
+                          math_ss))
+
+
 # Check final model 
 summary(lm(math_ss ~ grade_level +  factor(eco_dis) + lep + male + iep, data = export))
 
