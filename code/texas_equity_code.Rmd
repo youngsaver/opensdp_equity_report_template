@@ -89,7 +89,7 @@ This guide takes advantage of the OpenSDP synthetic dataset and several key R pa
 ```{r packages, eacho=FALSE}
 library(tidyverse) # main suite of R packages to ease data analysis
 library(magrittr) # allows for some easier pipelines of data
-library(tidyr) #
+library(tidyr) 
 library(plyr)
 library(dplyr)
 library(FSA)
@@ -105,7 +105,7 @@ source("../R/functions.R")
 
 ```{r loaddataset, eacho=FALSE}
 # // Step 1: Read in csv file of our dataset, naming it "texas.data"
-texas.data <- read.csv("../data/synth_data_3.csv")  
+texas.data <- read.csv("../data/synth_data_4.csv")  
 
 # // Step 2 (Optional): Read in file containing state-wide standard deviations for standardized tests
 sd.table <- read.csv("../data/sd_table.csv")
@@ -192,7 +192,7 @@ gap.table <- gap.test(df=texas.data,
                     features=c('eco_dis','lep','iep','race_ethnicity','male'),
                     sds = sd.table,
                     n = 3,
-                    cut = 200,
+                    cut = 120,
                     med = TRUE)
 
 ```
@@ -211,7 +211,7 @@ gaps <- gap.table[1,]
 rownames(gaps) <- NULL
 
 ##Note: to choose the analyze the top 'k' gaps, you would do this:
-#gaps <- gap.table[1:k,]
+#gaps <- gap.table[1:3,]
 #rownames(gaps) <- NULL
 
 ##Note: to choose the kth-jth gaps, you would do this:
@@ -558,7 +558,7 @@ for(i in 1:n.gaps){
   dem <- gaps[i,"feature"]
   
   #Isolates underperforming group in gap
-  if(gaps[i,"grade_level"]>=0){
+  if(gaps[i,"effect_size"]>=0){
     
     #Target demographic is level 2 of comparison
     target <- gaps[i,"level_2"]
@@ -645,7 +645,7 @@ for(i in 1:n.gaps){
   dem <- gaps[i,"feature"]
   
   #Isolates underperforming group in gap
-  if(gaps[i,"grade_level"]>=0){
+  if(gaps[i,"effect_size"]>=0){
     
     #Target demographic is level 2 of comparison
     target <- gaps[i,"level_2"]
@@ -785,9 +785,9 @@ for(i in 1:n.gaps){
   #control.2 <- "migrant"
   
   #Isolates high performing group in gap
-  if(gaps[i,"grade_level"]>=0){
+  if(gaps[i,"effect_size"]>=0){
     
-    #Reference demographic is level 1 of comparison, targe is level 2
+    #Reference demographic is level 1 of comparison, target is level 2
     ref.group <- gaps[i,"level_1"]
     target <- gaps[i,"level_2"]
     
@@ -832,7 +832,7 @@ for(i in 1:n.gaps){
   betas_unadj$std.error <- sqrt(diag(clusterSE))
   betas_unadj <- betas_unadj[, 1:3]
   #  Label
-  betas_unadj$model <- "Unadjusted gap"
+  betas_unadj$model <- "A: Unadjusted gap"
   
   # Estimate score gap adjusting for first control
   mod2 <- lm(data[,subject] ~ data[,dem] + data[,control.1])
@@ -840,7 +840,7 @@ for(i in 1:n.gaps){
   clusterSE <- get_CL_vcov(mod2, data$cluster_var)
   betas_adj_control_1$std.error <- sqrt(diag(clusterSE))
   betas_adj_control_1 <- betas_adj_control_1[, 1:3]
-  betas_adj_control_1$model <- "Gap adjusted for econ disadvantage"
+  betas_adj_control_1$model <- paste("B: Gap adjusted for", labels[control.1])
   
   # Estimate score gap adjusting for second control
   mod3 <- lm(data[,subject] ~ data[,dem] + data[,control.2])
@@ -848,7 +848,7 @@ for(i in 1:n.gaps){
   clusterSE <- get_CL_vcov(mod3, data$cluster_var)
   betas_adj_control_2$std.error <- sqrt(diag(clusterSE))
   betas_adj_control_2 <- betas_adj_control_2[, 1:3]
-  betas_adj_control_2$model <- "Gap adjusted for LEP status"
+  betas_adj_control_2$model <- paste("C: Gap adjusted for", labels[control.2])
   
   # Estimate score gap adjusting for both controls
   mod4 <- lm(data[,subject] ~ data[,dem] + data[,control.1] + data[,control.2])
@@ -856,7 +856,8 @@ for(i in 1:n.gaps){
   clusterSE <- get_CL_vcov(mod4, data$cluster_var)
   betas_adj_all$std.error <- sqrt(diag(clusterSE))
   betas_adj_all <- betas_adj_all[, 1:3]
-  betas_adj_all$model <- "Gap adjusted for Eco_Dis level & LEP status"
+  betas_adj_all$model <-  paste("D: Gap adj for", 
+                                labels[control.1],"&",labels[control.2])
   
   # // Step 6. Transform the regression coefficients to a data object for plotting
   chartData <- bind_rows(betas_unadj, betas_adj_control_1, betas_adj_control_2, 
