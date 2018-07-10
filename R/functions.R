@@ -10,12 +10,15 @@ library(tidyverse)
 #features = vector of features in dataset where testing for gaps (class: character)
 #n = set 'n' largest gaps the function outputs at the end (class: integer, default: 3)
 #sds (optional) = dataframe containing the standard deviations for all outcomes (class: data frame)
-#comp (optional) = Indicator to output additional comparative gap graphics (class: boolean, default: FALSE)
-#cut (optional) = Minimum number of students for level in a gap (class: integer)
-#med (optional) = Indicator if would like function to also output top standardized difference of medians (class: boolean, default: FALSE)
+#comp (optional) = indicator to output additional comparative gap graphics (class: boolean, default: FALSE)
+#cut (optional) = minimum number of students for level in a gap (class: integer)
+#med (optional) = indicator if would like function to also output top standardized difference of medians (class: boolean, default: FALSE)
+#outlbl (optional) = label for outcome to print on graphs  (class: string, default: NULL)
+#lbls (optional) = vector of labels for data features, to use in printed graphics. 
+##Must index labels by feature name as it appears in data (class: character vector, defualt: NULL)
 ##Begin function
 gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FALSE, 
-                     cut = NULL, med = FALSE) {
+                     cut = NULL, med = FALSE, outlbl = NULL) {
   
   #See if no standard deviations provided
   if(is.null(sds)){
@@ -36,7 +39,7 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
     sds[,1] <- as.integer(as.character(sds[,1]))
     sds[,2] <- as.numeric(as.character(sds[,2]))
     
-    }#End of conditional
+  }#End of conditional
   
   #Test to make sure feature names and dimensions are correct
   if(!any(colnames(sds)==grade) | 
@@ -59,7 +62,7 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
     stop("Either re-format the input to sds or use function without
             providing standard deviations")
     
-    }#End of conditional
+  }#End of conditional
   
   #Test to see if data is correct class
   if(class(sds[,grade]) != 'integer' | 
@@ -80,7 +83,7 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
       stop("Either re-format the input to sds or use function without
            providing standard deviations")
       
-    }#End of conditional
+  }#End of conditional
   
   #Convert features to factors
   df[,features] <- lapply(df[,features], as.character)
@@ -151,7 +154,9 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
         
         #Append gap to list and name in
         gaps <- append(gaps,gap,length(gaps))
-        names(gaps)[length(gaps)] <- paste(level1,"-",level2,feature,'\n',gr,outcome)
+        names(gaps)[length(gaps)] <- paste(level1,"-",level2,", ",
+                                           feature,'\n',"Grade ",gr,
+                                           ", ",outcome, sep="")
         
         #Append mean difference to list
         mean_diff <- mean(level1.data) - mean(level2.data)
@@ -166,7 +171,9 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
         
         #Append effect size and information to lists and name
         effects <- append(effects,r,length(effects))
-        names(effects)[length(effects)] <- paste(level1,"-",level2,'\n',feature,gr,outcome)
+        names(effects)[length(effects)] <- paste(level1,"-",level2,", ",
+                                                 feature,'\n',"Grade ",gr,
+                                                 ", ",outlbl, sep="")
         effects.level1 <- append(effects.level1, level1, length(effects.level1))
         effects.level2 <- append(effects.level2, level2, length(effects.level2))
         effects.f <- append(effects.f, feature, length(effects.f))
@@ -189,6 +196,26 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
   effects.gr <- effects.gr[order(abs(effects), decreasing = TRUE)]
   effects.outcome <- effects.outcome[order(abs(effects), decreasing = TRUE)]
   mean_diffs <- mean_diffs[order(abs(effects), decreasing = TRUE)]
+  
+  #Stores outcome label, based on user input
+  if(is.null(outlbl)){
+    
+    #Check to see if character
+    if(class(outlbl)!="character"){
+      
+      stop("outlbl must be of type 'character'")
+    }
+    
+    #Store label as column name
+    outlbl <- outcome
+  }
+  
+  #Stores outcome label, based on user input
+  if(is.null(outlbl)){
+    
+    #Store label as column name
+    outlbl <- outcome
+  }
   
   ##If want to show gaps by feature, will make and show plots
   if(comp){
@@ -285,9 +312,10 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
     #Barplot for standardized difference of medians
     barp <- ggplot(plot.df.med, aes(x= reorder(names, abs(med.s.gaps)), y=med.s.gaps)) +
       geom_bar(position="dodge",stat="identity")+
-      scale_x_discrete(name = "Comparison")+
+      scale_x_discrete(name = "")+
       scale_y_continuous(name = "Standardized median difference", limits = c(limit1,limit2))+
-      theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5, size=8))+
+      theme(axis.text=element_text(vjust=0.5, size=12),
+            axis.title=element_text(size = 14))+
       geom_text(aes(y = med.s.gaps+.02*sign(med.s.gaps), label=round(med.s.gaps,5)), 
                 size=4.5)+
       ggtitle(paste("Top",n,"standardized difference of medians, 
@@ -321,9 +349,10 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
   #Barplot for effect sizes
   barp <- ggplot(plot.df.effect, aes(x= reorder(names, abs(med.s.eff)), y=med.s.eff)) +
     geom_bar(position="dodge",stat="identity")+
-    scale_x_discrete(name = "Comparison")+
+    scale_x_discrete(name = "")+
     scale_y_continuous(name = "Effect Size", limits = c(limit1,limit2))+
-    theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5, size=8))+
+    theme(axis.text=element_text(vjust=0.5, size=12),
+          axis.title=element_text(size=14))+
     geom_hline(yintercept=0.1, linetype="solid", 
                color = "red", size=1)+
     geom_hline(yintercept=-0.1, linetype="solid", 
