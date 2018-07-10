@@ -328,8 +328,8 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
                color = "red", size=1)+
     geom_hline(yintercept=-0.1, linetype="solid", 
                color = "red", size=1)+
-    geom_text(aes(label=round(med.s.eff,5)), 
-              vjust = -0.4, size=4.5)+
+    geom_text(aes(y = med.s.eff+.01*sign(med.s.eff), label=round(med.s.eff,5)), 
+              size=4.5)+
     ggtitle(paste("Top",n,"effect sizes, 
                   Calculation: d = mean difference/pooled sd; effect size = d/sqrt(d^2+4)"))
   
