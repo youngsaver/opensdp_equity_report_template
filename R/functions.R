@@ -15,7 +15,7 @@ library(tidyverse)
 #med (optional) = indicator if would like function to also output top standardized difference of medians (class: boolean, default: FALSE)
 #outlbl (optional) = label for outcome to print on graphs  (class: string, default: NULL)
 #lbls (optional) = vector of labels for data features, to use in printed graphics. 
-##Must index labels by feature name as it appears in data (class: character vector, defualt: NULL)
+
 ##Begin function
 gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FALSE, 
                      cut = NULL, med = FALSE, outlbl = NULL) {
