@@ -13,7 +13,7 @@ library(tidyverse)
 #comp (optional) = indicator to output additional comparative gap graphics (class: boolean, default: FALSE)
 #cut (optional) = minimum number of students for level in a gap (class: integer)
 #med (optional) = indicator if would like function to also output top standardized difference of medians (class: boolean, default: FALSE)
-#outlbl (optional) = label for outcome to print on graphs  (class: string, default: NULL)
+#outlbl (optional) = label for outcome to print on graphs  (class: character, default: NULL)
 
 ##Begin function
 gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FALSE, 
