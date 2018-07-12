@@ -315,10 +315,11 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
       scale_y_continuous(name = "Standardized median difference", limits = c(limit1,limit2))+
       theme(axis.text=element_text(vjust=0.5, size=12),
             axis.title=element_text(size = 14))+
-      geom_text(aes(y = med.s.gaps+.02*sign(med.s.gaps), label=round(med.s.gaps,5)), 
+      geom_text(aes(y = med.s.gaps + .02*sign(med.s.gaps), label=round(med.s.gaps, 3)), 
                 size=4.5)+
-      ggtitle(paste("Top",n,"standardized difference of medians, 
-                    Calculation: (Median.1 - Median.2)/standard.deviation"))
+      labs(title = paste0("Top ", n, " standardized difference of medians"),
+           caption = expression("Calculation: " ~ frac(Delta ~ scriptstyle(medians), sigma))) + theme_bw()
+                
     
     print(barp)
     
@@ -356,10 +357,12 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
                color = "red", size=1)+
     geom_hline(yintercept=-0.1, linetype="solid", 
                color = "red", size=1)+
-    geom_text(aes(y = med.s.eff+.01*sign(med.s.eff), label=round(med.s.eff,5)), 
+    geom_text(aes(y = med.s.eff+.01*sign(med.s.eff), label=round(med.s.eff, 3)), 
               size=4.5)+
-    ggtitle(paste("Top",n,"effect sizes, 
-                  Calculation: d = mean difference/pooled sd; effect size = d/sqrt(d^2+4)"))
+    labs(title = paste0("Top ", n, " effect sizes"), 
+         caption = expression("Calculation: d = " ~ frac(bar(Delta), sigma[pooled]) ~ "\n" ~
+                  "Effect Size = " ~  frac(d, sqrt(d^2 + 4)))) + 
+           theme_bw()
   
   print(barp)
   
