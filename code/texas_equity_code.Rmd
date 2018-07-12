@@ -40,22 +40,41 @@ options(width=80)
 
 ### Objective
 
-In this guide, you will be able to use standard statistics and data visuals to investigate equity in student testing outcomes along lines of race, income, gender, learning differences, English proficiency, and migrancy status.
+In this guide, you will be able to use standard statistics and data visuals to
+investigate equity in student testing outcomes along lines of race, income,
+gender, learning differences, English proficiency, and migrancy status.
 
 ### Using this Guide
 
-This guide utilizes mock data from Texas's standardized exams (STAAR test, grades 3-8). Therefore, Texas districts can use this code to directly analyze the testing data files they have received from the Texas Education Agency. However, the code can be adapted to any other state or district context in which student testing outcomes are analyzed. 
+This guide utilizes mock data from Texas's standardized exams (STAAR test,
+grades 3-8). Therefore, Texas districts can use this code to directly analyze
+the testing data files they have received from the Texas Education Agency.
+However, the code can be adapted to any other state or district context in which
+student testing outcomes are analyzed.
 
-Once you have identified analyses that you want to try to replicate or modify, click the 
-"Download" buttons to download R code and sample data. You can make changes to the 
-charts using the code and sample data, or modify the code to work with your own data. If 
-you are familiar with Github, you can click "Go to Repository" and clone the entire repository to your own computer. 
+Once you have identified analyses that you want to try to replicate or modify,
+click the "Download" buttons to download R code and sample data. You can make
+changes to the charts using the code and sample data, or modify the code to work
+with your own data. If you are familiar with Github, you can click "Go to
+Repository" and clone the entire repository to your own computer.
 
-Go to the Participate page to read about more ways to engage with the OpenSDP community or reach out for assistance in adapting this code for your specific context.
+Go to the Participate page to read about more ways to engage with the OpenSDP
+community or reach out for assistance in adapting this code for your specific
+context.
 
 ### About the Data
 
-The data used in this guide was synthetically generated, and it was formatted to match the Texas Education Agency's state test file formats (Texas's file formats can be found here: https://tea.texas.gov/student.assessment/datafileformats). The data has one record per student. Out of the hundreds of features reported for each student by the Texas Education Agency, we used (and retained) the following features in our analysis: student grade level (3-8), school code, student ID, gender, race-ethnicity, economic disadvantage level, Limited English Proficiency level, and scale scores in reading, math, and writing (for the STAAR state test). We also used indicators of whether or not the student attended a Title 1 school, was a migrant, and was enrolled in special education. Here is a key of the features and their variable names in our simulated dataset:
+The data used in this guide was synthetically generated, and it was formatted to
+match the Texas Education Agency's state test file formats (Texas's file formats
+can be found here: https://tea.texas.gov/student.assessment/datafileformats).
+The data has one record per student. Out of the hundreds of features reported
+for each student by the Texas Education Agency, we used (and retained) the
+following features in our analysis: student grade level (3-8), school code,
+student ID, gender, race-ethnicity, economic disadvantage level, Limited English
+Proficiency level, and scale scores in reading, math, and writing (for the STAAR
+state test). We also used indicators of whether or not the student attended a
+Title 1 school, was a migrant, and was enrolled in special education. Here is a
+key of the features and their variable names in our simulated dataset:
 
 | Feature name    | Feature Description                                 |
 |:-----------     |:------------------                                  |
@@ -74,17 +93,33 @@ The data used in this guide was synthetically generated, and it was formatted to
 | `wrtg_ss`       | Scale score for writing exam                        |  
 | `composition`   | Score on writing composition exam                   |
 
-The original Texas Education Agency data files have hundreds of features attached to each student record. Coding our analyses with all of these features could get unwieldy, so the best practice is to select the key features we will need for our analyses. If you would like to directly use your own data with the code from this guide, it is best to delete unecessary features and change the headers to the feature names we chose (above). A more detailed data definition guide can be found in the `man` folder in the Github repository.
+The original Texas Education Agency data files have hundreds of features
+attached to each student record. Coding our analyses with all of these features
+could get unwieldy, so the best practice is to select the key features we will
+need for our analyses. If you would like to directly use your own data with the
+code from this guide, it is best to delete unecessary features and change the
+headers to the feature names we chose (above). A more detailed data definition
+guide can be found in the `man` folder in the Github repository.
 
-Although not required, it is useful to compile a small table of the standard deviations of the scores on the exams statewide, broken down by grade and subject area. This will allow us to compute more standardized measures of gaps in the following code. Here is an example of the expected table format, using standard deviations by grade and tested area from the 2014 Texas state STAAR exams:
+Although not required, it is useful to compile a small table of the standard
+deviations of the scores on the exams statewide, broken down by grade and
+subject area. This will allow us to compute more standardized measures of gaps
+in the following code. Here is an example of the expected table format, using
+standard deviations by grade and tested area from the 2014 Texas state STAAR
+exams:
 
 <img src="../img/sd_table.png" style="display: block; margin: 0 auto; height: 170px;">
 
-This standard deviation table is used in the code, specifically imported into the `sd.table` variable.
+This standard deviation table is used in the code, specifically imported into
+the `sd.table` variable.
 
 #### Loading the OpenSDP Dataset and R Packages
 
-This guide takes advantage of the OpenSDP synthetic dataset and several key R packages. The first chunk of code below loads the R packages (make sure to install first!), and the second chunk loads the dataset and provides us with variable labels. You can change the variable labels depending on the variables in your dataset.
+This guide takes advantage of the OpenSDP synthetic dataset and several key R
+packages. The first chunk of code below loads the R packages (make sure to
+install first!), and the second chunk loads the dataset and provides us with
+variable labels. You can change the variable labels depending on the variables
+in your dataset.
 
 ```{r packages, eacho=FALSE}
 #Packages
@@ -122,17 +157,27 @@ names(labels) <- c("grade_level","school_code","sid","male","race_ethnicity",
 
 ### About the Analyses
 
-In various contexts, students of different identity markers (race, class, gender, English Language Learner status, etc.) may have systematically differing educational outcomes. These gaps often present themselves in standardized testing data, at the national, state, and local levels. The following analyses will assist your organization in seeing where gaps exist and how wide they are, in order to inform the conversation about why the gaps exist and what to do about them.
+In various contexts, students of different identity markers (race, class,
+gender, English Language Learner status, etc.) may have systematically differing
+educational outcomes. These gaps often present themselves in standardized
+testing data, at the national, state, and local levels. The following analyses
+will assist your organization in seeing where gaps exist and how wide they are,
+in order to inform the conversation about why the gaps exist and what to do
+about them.
 
 ### Giving Feedback on this Guide
  
-This guide is an open-source document hosted on Github and generated using R Markdown. We welcome feedback, corrections, additions, and updates. Please visit the OpenSDP equity metrics repository to read our contributor guidelines.
+This guide is an open-source document hosted on Github and generated using R
+Markdown. We welcome feedback, corrections, additions, and updates. Please visit
+the OpenSDP equity metrics repository to read our contributor guidelines.
 
 ## Analyses
 
 ### Exploratory Analysis
 
-**Purpose:** Descriptive statistics give your agency a quick snapshot of current achievement gaps among students, identifying areas for further investigation and analysis.
+**Purpose:** Descriptive statistics give your agency a quick snapshot of current
+achievement gaps among students, identifying areas for further investigation and
+analysis.
 
 **Required Analysis File Variables:**
 
@@ -155,11 +200,16 @@ This guide is an open-source document hosted on Github and generated using R Mar
 - How do different study subpopulations in your organization perform on standardized tests?
 - Which differences do you want to explore further?
 
-**Analytic Technique:** Identify major achievement gaps within the student population. To achieve this, we use the SDP function `gap.test`, which is defined in the repository's `R` folder. Here is the usage information:
+**Analytic Technique:** Identify major achievement gaps within the student
+population. To achieve this, we use the SDP function `gap.test`, which is
+defined in the repository's `R` folder. Here is the usage information:
 
-`gap.test`: Visualizes and quantifies gaps in student performance across demographic markers.
+`gap.test`: Visualizes and quantifies gaps in student performance across
+demographic markers.
 
-Output: A `data.frame` table of the top `n` gaps, as measured by effect size, as well as the demographic and test information for each gap. Function also prints comparative visuals of top gaps.
+Output: A `data.frame` table of the top `n` gaps, as measured by effect size, as
+well as the demographic and test information for each gap. Function also prints
+comparative visuals of top gaps.
 
 Inputs:
 
@@ -176,7 +226,12 @@ Inputs:
 - med (optional) = Indicator if would like function to also output standardized difference of medians, in addition to effect size (class: boolean, default: FALSE)
 - outlbl (optional) = label for measurd outcome, to print on graphs (class: character, default: NULL)
 
-More detailed usage information can be found in the `R` folder in the GitHub repository. We use the function here to find the top 3 gaps in math scores, in terms of effect size, between students of different economic disadvantage levels, races, genders, Special Education statuses, and LEP statuses. We check among all grades: 3-8. The number of top gaps shown can be changed based on user inputs, as well as the gap categories and subject areas measured.
+More detailed usage information can be found in the `R` folder in the GitHub
+repository. We use the function here to find the top 3 gaps in math scores, in
+terms of effect size, between students of different economic disadvantage
+levels, races, genders, Special Education statuses, and LEP statuses. We check
+among all grades: 3-8. The number of top gaps shown can be changed based on user
+inputs, as well as the gap categories and subject areas measured.
 
 ```{r GapTest, echo=TRUE}
 #Use 'gap.test' function to explore most major gaps in student population
@@ -191,15 +246,47 @@ gap.table <- gap.test(df=texas.data,
 
 ```
 
-The `gap.test` output shows us that the top 3 gaps, in terms of effect size, are for 3rd, 4th, and 5th grade math scores between gender groups. The effect sizes are negative, and the labeling on the graph shows us the effect size was calculated with the average score for male "M" students subtracted from the average score for female "F" students. Thus, on average, the male students scored higher than female students. In our dataset, these gaps were wider than any other gap based in racial differences, socioeconoimc differences, differences in English proficiency status, or differences in special education status.   
+The `gap.test` output shows us that the top 3 gaps, in terms of effect size, are
+for 3rd, 4th, and 5th grade math scores between gender groups. The effect sizes
+are negative, and the labeling on the graph shows us the effect size was
+calculated with the average score for male "M" students subtracted from the
+average score for female "F" students. Thus, on average, the male students
+scored higher than female students. In our dataset, these gaps were wider than
+any other gap based in racial differences, socioeconoimc differences,
+differences in English proficiency status, or differences in special education
+status.
 
-The function also outputs a table with each effect size, mean difference (to show the gap on the scale of the test), and demographic information of the gap (groups affected, grade level, test subject). We have stored this as `gap.table`. If wanted, the user could set the inputs (see usage information above) of the function such that it outputs additional graphics, comparing gaps within each dataset feature. Here, we output one graphic for simplicity.
+The function also outputs a table with each effect size, mean difference (to
+show the gap on the scale of the test), and demographic information of the gap
+(groups affected, grade level, test subject). We have stored this as
+`gap.table`. If wanted, the user could set the inputs (see usage information
+above) of the function such that it outputs additional graphics, comparing gaps
+within each dataset feature. Here, we output one graphic for simplicity.
 
-Measuring the gaps in terms of effect size allows us to compare gaps across grade levels and subject areas, as effect size standardizes the gap by taking into account the pooled standard deviation of the tested groups on the tests they took. A good rule  of thumb is that an effect size greater in magnitude than 0.1 usually translates to large differences in effective classroom time. Hence, horizontal lines are labeled on the graph at 0.1 and -0.1. Gaps that surpass these thresholds should be looked at more thoroughly. The gender gaps in our data surpass this threshold and are similar across grade levels. For simplicity, this report will focus on one grade level, but the following analyses can be done across grade levels.
+Measuring the gaps in terms of effect size allows us to compare gaps across
+grade levels and subject areas, as effect size standardizes the gap by taking
+into account the pooled standard deviation of the tested groups on the tests
+they took. A good rule  of thumb is that an effect size greater in magnitude
+than 0.1 usually translates to large differences in effective classroom time.
+Hence, horizontal lines are labeled on the graph at 0.1 and -0.1. Gaps that
+surpass these thresholds should be looked at more thoroughly. The gender gaps in
+our data surpass this threshold and are similar across grade levels. For
+simplicity, this report will focus on one grade level, but the following
+analyses can be done across grade levels.
 
-One technical note: Sometimes the distibutions of test scores can be skewed, making the median a more advantageous measure of central tendency (since it is less sensitive to outliers and skew). In these cases, set the `gap.test` function's `med` parameter to `TRUE` to output a plot that shows the top 3 gaps as measured by the standardized median difference.
+One technical note: Sometimes the distibutions of test scores can be skewed,
+making the median a more advantageous measure of central tendency (since it is
+less sensitive to outliers and skew). In these cases, set the `gap.test`
+function's `med` parameter to `TRUE` to output a plot that shows the top 3 gaps
+as measured by the standardized median difference.
 
-Since our largest effect size gap was the grade 3 gender gap on the standardized math test, we will explore that gap further. For demonstration purposes, we will focus on just that one gap here. However, the next chunk of code will determine which gap(s) will be explored in the rest of our analyses. The user can explore multipe gaps at once by setting the following variables to include multiple gaps from `gap.table`. This is shown in commented out code in the middle of the chunk.
+Since our largest effect size gap was the grade 3 gender gap on the standardized
+math test, we will explore that gap further. For demonstration purposes, we will
+focus on just that one gap here. However, the next chunk of code will determine
+which gap(s) will be explored in the rest of our analyses. The user can explore
+multipe gaps at once by setting the following variables to include multiple gaps
+from `gap.table`. This is shown in commented out code in the middle of the
+chunk.
 
 ```{r SetGaps, echo=TRUE}
 # // Option 1: Choose to analyze just the largest gap
@@ -223,7 +310,10 @@ n.gaps <- 1
 
 ```
 
-**Analytic Technique:** Calculate the summary statistics for exam performance, for all students at the grade level(s) in which gaps are measured. This will give us a few points of reference. Here, we look at the distribution of scores on the 3rd grade math test.
+**Analytic Technique:** Calculate the summary statistics for exam performance,
+for all students at the grade level(s) in which gaps are measured. This will
+give us a few points of reference. Here, we look at the distribution of scores
+on the 3rd grade math test.
 
 ```{r Averages, echo=TRUE}
 #Prints summary statistics for each gap's grade level
@@ -243,9 +333,14 @@ for(i in 1:n.gaps){
 
 ```
 
-One particularly useful output in this summary is that we see the minimum and maximum scores in our dataset, which gives us a rough sense of the bounds for scores on this type of exam. It is tough to get a sense of the shape of the distribution from summary statistics alone, so we will turn to visualization. 
+One particularly useful output in this summary is that we see the minimum and
+maximum scores in our dataset, which gives us a rough sense of the bounds for
+scores on this type of exam. It is tough to get a sense of the shape of the
+distribution from summary statistics alone, so we will turn to visualization.
 
-**Analytic Technique:** Create visualizations of the data, to provide a more developed sense of the distributions behind these summary statistics. Specifically, here we use box plots and histograms
+**Analytic Technique:** Create visualizations of the data, to provide a more
+developed sense of the distributions behind these summary statistics.
+Specifically, here we use box plots and histograms
 
 ```{r VisualizeTotals, echo=TRUE}
 # // Visualizations: Box plots and Histograms
@@ -281,9 +376,16 @@ for(i in 1:n.gaps){
 
 ```
 
-We see left skew in the distribution of scores, as evidenced by the box plot and (more clearly) evidenced by the histogram. With skew present, it often makes sense to use the median as a measure of central tendency, since it is less susceptible to skew than the mean. We will keep this in mind during our forthcoming analyses.
+We see left skew in the distribution of scores, as evidenced by the box plot and
+(more clearly) evidenced by the histogram. With skew present, it often makes
+sense to use the median as a measure of central tendency, since it is less
+susceptible to skew than the mean. We will keep this in mind during our
+forthcoming analyses.
 
-**Analytic Technique:** Compare descriptive statistics among the different student demographic populations described in our gap. Now that we have some measures for the performance on exams among all of our students, we can create those same measures for male and female students. Then, we can compare them. 
+**Analytic Technique:** Compare descriptive statistics among the different
+student demographic populations described in our gap. Now that we have some
+measures for the performance on exams among all of our students, we can create
+those same measures for male and female students. Then, we can compare them.
 
 ```{r DescriptiveDemographics, echo=TRUE}
 # // Comparisons: Generating summary stats for demographics in gaps
@@ -312,9 +414,15 @@ for(i in 1:n.gaps){
 
 ```
 
-We can see that we have more male than female students in our data. In addition, each statistic (Q1, median, mean, Q3, min, max) is shifted up about 40 points for males, compared to females. This suggests that the distributions share a shape, but are centered at different scale scores. We will explore this hypothesis directly by looking at shapes through visualization.
+We can see that we have more male than female students in our data. In addition,
+each statistic (Q1, median, mean, Q3, min, max) is shifted up about 40 points
+for males, compared to females. This suggests that the distributions share a
+shape, but are centered at different scale scores. We will explore this
+hypothesis directly by looking at shapes through visualization.
 
-**Analytic Technique:** Visualize the comparisons, to give us a sense of scale and shape in these gaps. To do so, we will use both box plots broken down by gender and a stacked histogram broken down by gender.
+**Analytic Technique:** Visualize the comparisons, to give us a sense of scale
+and shape in these gaps. To do so, we will use both box plots broken down by
+gender and a stacked histogram broken down by gender.
 
 ```{r VisualizeEcoDis, echo=TRUE}
 # // Step 1: Initialize a set of distinguishable colors for graphics
@@ -353,13 +461,29 @@ for(i in 1:n.gaps){
 } #End loop over gap number
 ```
 
-As we predicted, the distributions have similar shapes, with the male distribution shifted to higher scores than the female distribution. When broken down by gender group, the distributions maintain a left skew, which provides even more support for using the median as a measure of central tendency in the following analyses.
+As we predicted, the distributions have similar shapes, with the male
+distribution shifted to higher scores than the female distribution. When broken
+down by gender group, the distributions maintain a left skew, which provides
+even more support for using the median as a measure of central tendency in the
+following analyses.
 
-**Analytic Technique:** Explore gap within levels of another data feature. Often, it can be helpful to look at the intersections of the demographic data we pulled. In particular, exploring possible gaps among combinations of race, socioeconomic status, gender, and student label status (LEP, Spec Ed, Migrancy, etc.) can elucidate further achievement gaps in the data. Here, we will explore the intersection of socioeconomic status (measured by economic disadvantage) and the gender gap in math, by measuring the gender gap within each level of socioeconomic status in our data. For example, in this context, the gender gap may be heightened among econoimcally advantaged students but may not be present among economically disadvantaged students. Such a distinction could influence target populations for possible interventions.
+**Analytic Technique:** Explore gap within levels of another data feature.
+Often, it can be helpful to look at the intersections of the demographic data we
+pulled. In particular, exploring possible gaps among combinations of race,
+socioeconomic status, gender, and student label status (LEP, Spec Ed, Migrancy,
+etc.) can elucidate further achievement gaps in the data. Here, we will explore
+the intersection of socioeconomic status (measured by economic disadvantage) and
+the gender gap in math, by measuring the gender gap within each level of
+socioeconomic status in our data. For example, in this context, the gender gap
+may be heightened among econoimcally advantaged students but may not be present
+among economically disadvantaged students. Such a distinction could influence
+target populations for possible interventions.
 
-The user can change the comparison from socioeconomic status to another factor by manipulating the `group.by` variable.
+The user can change the comparison from socioeconomic status to another factor
+by manipulating the `group.by` variable.
 
-For reference, Texas defines socioeconomic or "economic disadvantage" levels in its data by the following convention:
+For reference, Texas defines socioeconomic or "economic disadvantage" levels in
+its data by the following convention:
 
 | Economic Disadvantage Level   | Description               |
 |:--------          |:------------------------------------  |
@@ -434,11 +558,22 @@ for(i in 1:n.gaps){
 
 ```
 
-The box plots show that the distributions are shifted upwards for male students compared to female students across each socioeconomic marker. In addition, the summary tables show that the medians are shifted upwards, again, by about 40 points among each socioeconomic group. The shape of the distributions, as shown in the histograms, also remains roughly consistent across socioeconomic level. Since the gap persists at each socioeconomic level, our analysis should focus on the gender gap overall, rather than for any one particular set of socioeconomic subgroups. 
+The box plots show that the distributions are shifted upwards for male students
+compared to female students across each socioeconomic marker. In addition, the
+summary tables show that the medians are shifted upwards, again, by about 40
+points among each socioeconomic group. The shape of the distributions, as shown
+in the histograms, also remains roughly consistent across socioeconomic level.
+Since the gap persists at each socioeconomic level, our analysis should focus on
+the gender gap overall, rather than for any one particular set of socioeconomic
+subgroups.
 
 ### Comparing gaps at schools
 
-**Purpose:** When you already have a sense of which gaps are greatest in magnitude throughout the dataset, it can be useful to pinpoint at which schools the gaps are most exaggerated (and at which schools the gaps are most narrow). Identifying these schools can lead to further investigation, providing context as to why these variations exist. 
+**Purpose:** When you already have a sense of which gaps are greatest in
+magnitude throughout the dataset, it can be useful to pinpoint at which schools
+the gaps are most exaggerated (and at which schools the gaps are most narrow).
+Identifying these schools can lead to further investigation, providing context
+as to why these variations exist.
 
 **Required Analysis File Variables:**
 
@@ -451,11 +586,21 @@ The box plots show that the distributions are shifted upwards for male students 
 **Ask Yourself**
 
 - At what schools are the gaps most exaggerated? At what schools are the gaps most narrow?
-- What further analyses could we perform to investigate the reasons behind variation in gap sizes between schools?
+- What further analyses could we perform to investigate the reasons behind
+variation in gap sizes between schools?
 
-**Analytic Technique:** Calculate achievement gaps using standardized median differences within each school. We have decided to use medians, rather than means, because the distributions for our test scores (as shown in the histograms above) tend to be skewed left. With such skew, means can be deflated. Medians, which are less sensitive to skew, are often more effective measures of central tendency in such cases.
+**Analytic Technique:** Calculate achievement gaps using standardized median
+differences within each school. We have decided to use medians, rather than
+means, because the distributions for our test scores (as shown in the histograms
+above) tend to be skewed left. With such skew, means can be deflated. Medians,
+which are less sensitive to skew, are often more effective measures of central
+tendency in such cases.
 
-Note: we standardize the median differences here by utilizing the state standard deviations on these exams (stored in `sd.table`). If these standard deviations are not available, as a stand-in, you can calculate the standard deviation within the dataset you provide. There is commented out code within the chunk that you can activate to complete this task.
+Note: we standardize the median differences here by utilizing the state standard
+deviations on these exams (stored in `sd.table`). If these standard deviations
+are not available, as a stand-in, you can calculate the standard deviation
+within the dataset you provide. There is commented out code within the chunk
+that you can activate to complete this task.
 
 ```{r SchoolGaps, echo=TRUE}
 # // Measure and sort standardized median differences by school
@@ -529,17 +674,41 @@ for(i in 1:n.gaps){
 
 ```
 
-A common reaction to the above graphic is to wonder if the schools with the greatest magnitude gaps--such as school number 8 in our data--is discriminitory towards female students (in terms of math education). However, such a claim would require further analyses beyond the scope of this report. 
+A common reaction to the above graphic is to wonder if the schools with the
+greatest magnitude gaps--such as school number 8 in our data--is discriminitory
+towards female students (in terms of math education). However, such a claim
+would require further analyses beyond the scope of this report.
 
-First, it would be helpful to explore the size of each of these schools. Often, district datasets include small programs that are labeled with their own school codes. School 8 may be, for example, a program with only 20 students. With such a small sample size, an exaggerated gap could be due to noise in the data.  
+First, it would be helpful to explore the size of each of these schools. Often,
+district datasets include small programs that are labeled with their own school
+codes. School 8 may be, for example, a program with only 20 students. With such
+a small sample size, an exaggerated gap could be due to noise in the data.
 
-It is also helpful to take into account the unique dynamics of specialized schools. For example, school 8 may be a selective arts program, in which most of the students enrolled for performance art are female and most enrolled for music are male. In such a case, there may be a selection bias, as aspiring performance artists may focus on math less in their education than music students, who study rhythmn and theory. Due to selection bias, this could show up in our analysis as a gender gap.
+It is also helpful to take into account the unique dynamics of specialized
+schools. For example, school 8 may be a selective arts program, in which most of
+the students enrolled for performance art are female and most enrolled for music
+are male. In such a case, there may be a selection bias, as aspiring performance
+artists may focus on math less in their education than music students, who study
+rhythmn and theory. Due to selection bias, this could show up in our analysis as
+a gender gap.
 
-Ideally, both qualitative (observational) and quantitative assessment could be done to determine if there are discriminatory practices at a certain school. The gold standard of these analyses would be a randomized trial. Even if practices are not determined to be strictly discriminatory, schools with large gaps could potentially learn from the policies and practices of schools at which the gap is much lower in magnitude. This visualization could provide impetus for the start a collaborative conversation between campuses.
+Ideally, both qualitative (observational) and quantitative assessment could be
+done to determine if there are discriminatory practices at a certain school. The
+gold standard of these analyses would be a randomized trial. Even if practices
+are not determined to be strictly discriminatory, schools with large gaps could
+potentially learn from the policies and practices of schools at which the gap is
+much lower in magnitude. This visualization could provide impetus for the start
+a collaborative conversation between campuses.
 
 ### Identifying Target Schools
 
-**Purpose:** Policymakers may propose interventions to work towards closing these gaps. Such interventions generally target the low-scoring student population and attempt to raise them up (through special programming, extra supports, or other methods) to the level of their counterparts. With limited resources, policymakers may have to choose which schools will immediately receive the intervention and which schools will not. The following analyses can be used to inform that decision.
+**Purpose:** Policymakers may propose interventions to work towards closing
+these gaps. Such interventions generally target the low-scoring student
+population and attempt to raise them up (through special programming, extra
+supports, or other methods) to the level of their counterparts. With limited
+resources, policymakers may have to choose which schools will immediately
+receive the intervention and which schools will not. The following analyses can
+be used to inform that decision.
 
 **Required Analysis File Variables:**
 
@@ -551,10 +720,19 @@ Ideally, both qualitative (observational) and quantitative assessment could be d
 
 **Ask Yourself**
 
-- Which is more important in this decision-making process: identifying the schools with the lowest median scores for a student population or identifying the campuses with the largest number of students (of our target population) performing below a certain benchmark?
+- Which is more important in this decision-making process: identifying the
+schools with the lowest median scores for a student population or identifying
+the campuses with the largest number of students (of our target population)
+performing below a certain benchmark?
 - What types of interventions would be most useful for our target schools?
 
-**Analytic Technique:** Calculate the median test scores at each campus among our target population (here, female students). This will give us a sense of where students from our target student population are performing relatively poorly compared to their peers at other schools. Again, we choose the medians here because they are less susceptible to skew and outliers. We will visualize these medians with bar charts, and we will visualize the three lowest peforming schools with comparative box plots.
+**Analytic Technique:** Calculate the median test scores at each campus among
+our target population (here, female students). This will give us a sense of
+where students from our target student population are performing relatively
+poorly compared to their peers at other schools. Again, we choose the medians
+here because they are less susceptible to skew and outliers. We will visualize
+these medians with bar charts, and we will visualize the three lowest peforming
+schools with comparative box plots.
 
 ```{r MedianTargets, echo=TRUE}
 # // Measure and sort medians by school
@@ -640,17 +818,37 @@ for(i in 1:n.gaps){
 
 ```
 
-Here we see that schools 8 and 4, which had among the three widest gaps, also had median math scores for female students that were among the lowest in the district. By contrast, school 11 had a relatively moderate gender gap within the school, even though it also had a median math score among the three lowest overall. This may mean that school 11's male students also perform relatively poorly on math exams, making the gap within the school less pronounced.
+Here we see that schools 8 and 4, which had among the three widest gaps, also
+had median math scores for female students that were among the lowest in the
+district. By contrast, school 11 had a relatively moderate gender gap within the
+school, even though it also had a median math score among the three lowest
+overall. This may mean that school 11's male students also perform relatively
+poorly on math exams, making the gap within the school less pronounced.
 
-Given that districts have limited resources, it may also be useful to take school size into account. For example, a small school may have the worst median female student performance in a district. However, it could be more efficient to target a larger school with slightly higher median performance scores if that school has more low-scoring female students overall. At the larger school, in theory, a new intervention effort could reach a greater number of low-scoring female students than at the smaller school. Therefore, it could more effectively contribute to the closing of the district achievement gap overall.
+Given that districts have limited resources, it may also be useful to take
+school size into account. For example, a small school may have the worst median
+female student performance in a district. However, it could be more efficient to
+target a larger school with slightly higher median performance scores if that
+school has more low-scoring female students overall. At the larger school, in
+theory, a new intervention effort could reach a greater number of low-scoring
+female students than at the smaller school. Therefore, it could more effectively
+contribute to the closing of the district achievement gap overall.
 
-We model this type of analysis below. Of course, if this technique is used in isolation, it has the potential downside of systematically preferencing resources towards larger schools. The result could be perceived favoritism or discrimination. Therefore, this analysis should provide just one among several considerations when picking target schools. 
+We model this type of analysis below. Of course, if this technique is used in
+isolation, it has the potential downside of systematically preferencing
+resources towards larger schools. The result could be perceived favoritism or
+discrimination. Therefore, this analysis should provide just one among several
+considerations when picking target schools.
 
 
-**Analytic Technique:** Isolate the raw number of students at each school in our target populations who perform below certain benchmarks. We will do this in two ways: 
+**Analytic Technique:** Isolate the raw number of students at each school in our
+target populations who perform below certain benchmarks. We will do this in two
+ways:
 
-1) We will look at the number of target students in each campus who scored below the district-wide median.
-2) We will look at the number of target students at each campus who scored below the district-wide first quartile.
+1) We will look at the number of target students in each campus who scored below
+the district-wide median.
+2) We will look at the number of target students at each campus who scored below
+the district-wide first quartile.
 
 ```{r RawNumberTargets, echo=TRUE}
 ## // Find number of low-scoring students by school
@@ -724,17 +922,36 @@ for(i in 1:n.gaps){
 } # End loop over gap number
 ```
 
-From this visualization, we see that interventions would reach the greatest number of low-scoring students in our targeted population if implemented at schools 3, 5, and 6. The schools that seemed like likely targets from our previous analyses--schools 8, 4, and 11--have fewer low-scoring female students. 
+From this visualization, we see that interventions would reach the greatest
+number of low-scoring students in our targeted population if implemented at
+schools 3, 5, and 6. The schools that seemed like likely targets from our
+previous analyses--schools 8, 4, and 11--have fewer low-scoring female students.
 
-In making a final selection of schools for intervention, policymakers would have to weigh the goal of minimizing the achievement gap in the district overall against the potential downside of biasing the placement of interventions towards larger schools.
+In making a final selection of schools for intervention, policymakers would have
+to weigh the goal of minimizing the achievement gap in the district overall
+against the potential downside of biasing the placement of interventions towards
+larger schools.
 
 ### Isolating effects of covariates
 
-**Purpose:** Students possess many individual and demographic features that simultaneously affect their education. It can be hard to determine, from an equity perspective, what factor most affects a student's ability to learn and achieve. 
+**Purpose:** Students possess many individual and demographic features that
+simultaneously affect their education. It can be hard to determine, from an
+equity perspective, what factor most affects a student's ability to learn and
+achieve.
 
-For example, in the data, you may notice undocumented students generally score lower on reading tests. One could draw the conclusion from this trend that there exist direct barriers to achievement for undocumented students that the district or state must tackle. 
+For example, in the data, you may notice undocumented students generally score
+lower on reading tests. One could draw the conclusion from this trend that there
+exist direct barriers to achievement for undocumented students that the district
+or state must tackle.
 
-However, many undocumented students may be Limited English Proficient (LEP) learners. In many cases, LEP students in general also have lower reading scores, due to language barriers. Can the correlation between immigration status and lower scores be mostly explained by such language barriers? Or does the noticeable score effect from immigration status remain, even when we control for English proficiency level? Testing out this nuance, and others like it, can help a district hone its efforts and create better policy for low-scoring student populations.
+However, many undocumented students may be Limited English Proficient (LEP)
+learners. In many cases, LEP students in general also have lower reading scores,
+due to language barriers. Can the correlation between immigration status and
+lower scores be mostly explained by such language barriers? Or does the
+noticeable score effect from immigration status remain, even when we control for
+English proficiency level? Testing out this nuance, and others like it, can help
+a district hone its efforts and create better policy for low-scoring student
+populations.
 
 **Required Analysis File Variables:**
 
@@ -748,16 +965,25 @@ However, many undocumented students may be Limited English Proficient (LEP) lear
 
 **Ask Yourself**
 
-- Can we draw causal estimates from this type of analysis, or is it only correlatoinal?
+- Can we draw causal estimates from this type of analysis, or is it only
+correlatoinal?
 - How do we best choose what controls we use in our equations?
 
-**Analytic Technique:** Perform multiple regression. We choose multiple regression because our outcome variable (scale scores on tests) is approximately continuous, and the technique will allow us to come up with our correlatoin estimates while controlling for various factors. Note: the user will have to set the variable for which s/he would like to control. Many combinations are possible, and we make the following specific recommendations (the code will default to these recommendations):
+**Analytic Technique:** Perform multiple regression. We choose multiple
+regression because our outcome variable (scale scores on tests) is approximately
+continuous, and the technique will allow us to come up with our correlatoin
+estimates while controlling for various factors. Note: the user will have to set
+the variable for which s/he would like to control. Many combinations are
+possible, and we make the following specific recommendations (the code will
+default to these recommendations):
 
 - If analyzing race gaps, control for socioeconomic level and english proficiency status.
 - If analyzing gender gaps, control for race and socioeconomic level.
 - If analyzing socioeconomic gaps, control for race and english proficiency status.
 
-In the code block below, there is space to override these defaults if you would like to control for other factors in combinations other than the ones listed above.
+In the code block below, there is space to override these defaults if you would
+like to control for other factors in combinations other than the ones listed
+above.
 
 ```{r CoefficientAnalysis, echo=TRUE}
 # // Step 1: Initialize controls
@@ -913,6 +1139,13 @@ for(i in 1:n.gaps){
 }#End loop over gap number
 ```
 
-The gender gap, as demonstrated by the regression coefficent values visualized as bars above, remains highly consistent, even after controlling for race-ethnicity and economic disadvantage level in our dataset. In the regression equations, the coefficient remains highly significant (p < 0.0001). Therefore, we know that the gap cannot be explained by variation due to race or economic disadvantage level.
+The gender gap, as demonstrated by the regression coefficent values visualized
+as bars above, remains highly consistent, even after controlling for
+race-ethnicity and economic disadvantage level in our dataset. In the regression
+equations, the coefficient remains highly significant (p < 0.0001). Therefore,
+we know that the gap cannot be explained by variation due to race or economic
+disadvantage level.
 
-This trend was partially shown earlier in our analysis, as the gaps and shapes of the math score distributions for gender were consistent across socioeconomic levels. 
+This trend was partially shown earlier in our analysis, as the gaps and shapes
+of the math score distributions for gender were consistent across socioeconomic
+levels.
