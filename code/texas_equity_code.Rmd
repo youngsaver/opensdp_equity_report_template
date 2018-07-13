@@ -25,7 +25,7 @@ library(knitr)
 knitr::opts_chunk$set(comment=NA, warning=FALSE, echo=TRUE,
                       root.dir = normalizePath("../"),
                       error=FALSE, message=FALSE, fig.align='center',
-                      fig.width=8, fig.height=6, dpi = 144, 
+                      fig.width=6, fig.height=6, dpi = 144, 
                       fig.path = "../figure/E_", 
                       cache.path = "../cache/E_")
 options(width=80)
@@ -40,7 +40,7 @@ options(width=80)
 
 ### Objective
 
-In this guide, you will be able to use standard statistics and data visuals to
+In this guide, you will use data visualization and descriptive statistics to
 investigate equity in student testing outcomes along lines of race, income,
 gender, learning differences, English proficiency, and migrancy status.
 
@@ -111,7 +111,7 @@ exams:
 <img src="../img/sd_table.png" style="display: block; margin: 0 auto; height: 170px;">
 
 This standard deviation table is used in the code, specifically imported into
-the `sd.table` variable.
+the `sd_table` variable.
 
 #### Loading the OpenSDP Dataset and R Packages
 
@@ -132,11 +132,11 @@ source("../R/functions.R")
 ```
 
 ```{r loaddataset, eacho=FALSE}
-# // Step 1: Read in csv file of our dataset, naming it "texas.data"
-texas.data <- read.csv("../data/synth_texas.csv")  
+# // Step 1: Read in csv file of our dataset, naming it "texas_data"
+texas_data <- read.csv("../data/synth_texas.csv")  
 
 # // Step 2 (Optional): Read in file containing state-wide standard deviations for standardized tests
-sd.table <- read.csv("../data/sd_table.csv")
+sd_table <- read.csv("../data/sd_table.csv")
 
 # // Step 3: Create a vector of labels for feature names in our dataset 
 #These labels will appear in visualizations and tables
@@ -151,6 +151,9 @@ names(labels) <- c("grade_level","school_code","sid","male","race_ethnicity",
                    "eco_dis","title_1","migrant",
                    "lep","iep","rdg_ss",
                    "math_ss","wrtg_ss","composition")
+
+## Set state proficiency levels
+prof_lev
 
 ```
 
@@ -172,6 +175,15 @@ Markdown. We welcome feedback, corrections, additions, and updates. Please visit
 the OpenSDP equity metrics repository to read our contributor guidelines.
 
 ## Analyses
+
+We will now walk through a series of four analysis in this guide. The first will 
+be a basic exploration of the performance gaps by subgroups on the assessments. 
+THe next will look at how the gaps vary across schools. The third will model 
+a targeting exercise to identify schools for possible intervention or further 
+investigation. The final analysis will use regression modeling to look at the 
+magnitude of the largest gap(s) in the district while controlling for other 
+factors. 
+
 
 ### Exploratory Analysis
 
@@ -197,7 +209,8 @@ analysis.
 
 **Ask Yourself**
 
-- How do different study subpopulations in your organization perform on standardized tests?
+- How do different study subpopulations in your organization perform on
+standardized tests?
 - Which differences do you want to explore further?
 
 **Analytic Technique:** Identify major achievement gaps within the student
@@ -235,11 +248,11 @@ inputs, as well as the gap categories and subject areas measured.
 
 ```{r GapTest, echo=TRUE}
 #Use 'gap.test' function to explore most major gaps in student population
-gap.table <- gap.test(df=texas.data,
-                    grade="grade_level",
-                    outcome="math_ss",
-                    features=c('eco_dis','lep','iep','race_ethnicity','male'),
-                    sds = sd.table,
+gap.table <- gap.test(df = texas_data,
+                    grade = "grade_level",
+                    outcome = "math_ss",
+                    features = c('eco_dis','lep','iep','race_ethnicity','male'),
+                    sds = sd_table,
                     n = 3,
                     cut = 120,
                     outlbl = "math score gap")
@@ -324,7 +337,7 @@ for(i in 1:n.gaps){
   grade <- gaps[i,"grade_level"]
   subject <- gaps[i,"outcome"]
   
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  data = texas_data[texas_data$grade_level == grade,] #Isolates grade level
   print(paste("Grade level:",grade,", Outcome:",labels[subject]))
   a <- summary(data[,subject]) #Summary stats table for grade and test
   print(a) #Print summary table
@@ -351,7 +364,7 @@ for(i in 1:n.gaps){
   grade <- gaps[i,"grade_level"]
   subject <- gaps[i,"outcome"]
   
-  data = texas.data[texas.data$grade_level == grade,] #Isolates 5th and 8th graders
+  data = texas_data[texas_data$grade_level == grade,] #Isolates 5th and 8th graders
   
     #Set variables and parameters for our boxplot
     p <- ggplot(data, aes(x=as.factor(grade_level), y=data[,subject])) + 
@@ -400,7 +413,7 @@ for(i in 1:n.gaps){
   lvl2 <- gaps[i,"level_2"]
   
   #Isolate data for grade and gap demographics
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  data = texas_data[texas_data$grade_level == grade,] #Isolates grade level
   data = data[data[,dem] == lvl1 | data[,dem] == lvl2, ]#Isolates demographic groups
   
   #Print subject and grade level
@@ -438,7 +451,7 @@ for(i in 1:n.gaps){
   lvl1 <- gaps[i,"level_1"]
   lvl2 <- gaps[i,"level_2"]
   
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  data = texas_data[texas_data$grade_level == grade,] #Isolates grade level
   data = data[data[,dem] == lvl1 | data[,dem] == lvl2, ]#Isolates demographic groups
       
   #Set variables and parameters for our boxplot
@@ -509,7 +522,7 @@ for(i in 1:n.gaps){
   lvl1 <- gaps[i,"level_1"]
   lvl2 <- gaps[i,"level_2"]
   
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  data = texas_data[texas_data$grade_level == grade,] #Isolates grade level
   data = data[data[,dem] == lvl1 | data[,dem] == lvl2, ]#Isolates demographic groups
   res <- levels(as.factor(data[,group.by])) #Different levels of 'group.by' to explore
 
@@ -597,7 +610,7 @@ which are less sensitive to skew, are often more effective measures of central
 tendency in such cases.
 
 Note: we standardize the median differences here by utilizing the state standard
-deviations on these exams (stored in `sd.table`). If these standard deviations
+deviations on these exams (stored in `sd_table`). If these standard deviations
 are not available, as a stand-in, you can calculate the standard deviation
 within the dataset you provide. There is commented out code within the chunk
 that you can activate to complete this task.
@@ -614,14 +627,14 @@ for(i in 1:n.gaps){
   lvl1 <- gaps[i,"level_1"]
   lvl2 <- gaps[i,"level_2"]
   
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  data = texas_data[texas_data$grade_level == grade,] #Isolates grade level
   sd.within <- sd(data[,subject]) #Stores standard deviation for subject and grade level
   data = data[data[,dem] == lvl1 | data[,dem] == lvl2, ]#Isolates demographic groups
     
   #Finds overall district scaled median difference
   dis.meds <- tapply(data[,subject], data[,dem], median, na.rm=TRUE)
   dis.diff <- (dis.meds[lvl1] - dis.meds[lvl2])/
-    sd.table[sd.table[,"grade_level"]==grade,subject]
+    sd_table[sd_table[,"grade_level"]==grade,subject]
   names(dis.diff) <- c("district")
   
   ##If no state standard deviation available, use this code instead,
@@ -637,7 +650,7 @@ for(i in 1:n.gaps){
   
   #Finds gaps and scales by standard deviation
   differences <- (school.meds[,lvl1] - school.meds[,lvl2])/
-    sd.table[sd.table[,"grade_level"]==grade,subject]
+    sd_table[sd_table[,"grade_level"]==grade,subject]
   differences <- c(differences, dis.diff) #include district-wide difference
   
   ##If no state standard deviation available, use this code instead,
@@ -675,30 +688,40 @@ for(i in 1:n.gaps){
 ```
 
 A common reaction to the above graphic is to wonder if the schools with the
-greatest magnitude gaps--such as school number 8 in our data--is discriminitory
-towards female students (in terms of math education). However, such a claim
-would require further analyses beyond the scope of this report.
+greatest magnitude gaps--such as school number 8 in our data-- has discriminitory 
+practices towards female students. Discriminatory practices are often implicit 
+and unintentional which is why data on achievement gaps can be a helpful prompt 
+on where to look to review practices further that may be creating implicit 
+biases against female students (e.g. tracking fewer female students to advanced 
+math courses, calling on female students less in math class, or recruiting male 
+students more frequently for enrichment and extracurricular math opportunities). 
+Proving a direct relationship between these practices and gender achievement 
+gaps is beyond the scope of this report, however, further analyses may give 
+additional insight. 
 
 First, it would be helpful to explore the size of each of these schools. Often,
 district datasets include small programs that are labeled with their own school
 codes. School 8 may be, for example, a program with only 20 students. With such
-a small sample size, an exaggerated gap could be due to noise in the data.
+a small sample size, an exaggerated gap could be due to noise in the data. We 
+will look further into school size in the targeting analysis in the next section.
 
 It is also helpful to take into account the unique dynamics of specialized
 schools. For example, school 8 may be a selective arts program, in which most of
 the students enrolled for performance art are female and most enrolled for music
 are male. In such a case, there may be a selection bias, as aspiring performance
-artists may focus on math less in their education than music students, who study
+artists may focus on mgath less in their education than music students, who study
 rhythmn and theory. Due to selection bias, this could show up in our analysis as
 a gender gap.
 
-Ideally, both qualitative (observational) and quantitative assessment could be
-done to determine if there are discriminatory practices at a certain school. The
-gold standard of these analyses would be a randomized trial. Even if practices
-are not determined to be strictly discriminatory, schools with large gaps could
-potentially learn from the policies and practices of schools at which the gap is
-much lower in magnitude. This visualization could provide impetus for the start
-a collaborative conversation between campuses.
+Ideally, we would want to look further into the practices and data of schools
+showing high gaps to identify root causes. Some additional pieces of evidence we
+could look, for example, would be the trajectory of the gap (is it widening or
+shrinking), participation rates in advanced mathematics courses by gender, or
+classroom observations of math instruction. These types of analyses would help
+further identify schools and provide additional information that schools could
+share about their practices and procedures to contrast high and low gap school
+ptracitces. This visualization could provide impetus for the start a
+collaborative conversation between campuses.
 
 ### Identifying Target Schools
 
@@ -758,7 +781,7 @@ for(i in 1:n.gaps){
     
   }#End of conditional
   
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  data = texas_data[texas_data$grade_level == grade,] #Isolates grade level
   data = data[data[,dem] == target, ]#Isolates target demographic
     
   #Finds overall district median
@@ -876,7 +899,7 @@ for(i in 1:n.gaps){
   }#End of conditional
   
   #Isolates grade level
-  data = texas.data[texas.data$grade_level == grade,]
+  data = texas_data[texas_data$grade_level == grade,]
   
   #Calculates district median and first quartile scores for test
   dist.median <- median(data[,subject]) #district median
@@ -1044,7 +1067,7 @@ for(i in 1:n.gaps){
   }#End of conditional
   
   # // Step 2: Isolate grade level
-  data = texas.data[texas.data$grade_level == grade,] #Isolates grade level
+  data = texas_data[texas_data$grade_level == grade,] #Isolates grade level
   
   # // Step 3: Recode variables and create cluster variable
   data[,dem] <- as.factor(data[,dem])
