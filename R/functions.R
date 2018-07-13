@@ -477,3 +477,46 @@ pkgTest <- function(x){
   }
   
 }
+
+
+# Annotate a ggplot with proficiency levels
+
+# Plot = ggplot2 object
+# prof_levels = a formatted ggplot2 object
+# direction = character, horizontal or vertical, which direction should line be drawn
+add_ref_levels <- function(plot, prof_levels, direction = c("horizontal", "vertical"), 
+                           grade, subject) {
+  direction <- match.arg(direction)
+  plot_levels <- prof_levels[prof_levels$grade == grade, ]
+  plot_levels <- plot_levels[plot_levels$subject == subject, ]
+  
+  # Get range 1
+  if(!is.null(ggplot_build(plot)$layout$panel_scales_y[[1]]$range_c)){
+    y_range <- ggplot_build(plot)$layout$panel_scales_y[[1]]$range_c$range
+  } else {
+    y_range <- ggplot_build(plot)$layout$panel_scales_y[[1]]$range$range
+  }
+  # get range 2 
+  if(!is.null(ggplot_build(plot)$layout$panel_scales_x[[1]]$range_c)){
+    x_range <- ggplot_build(plot)$layout$panel_scales_x[[1]]$range_c$range
+  } else {
+    x_range <- ggplot_build(plot)$layout$panel_scales_x[[1]]$range$range
+  }
+  
+  if(direction == "horizontal"){
+    plot <- plot + geom_hline(data = plot_levels, aes(yintercept = score)) + 
+      geom_text(data = plot_levels, aes(y = score + 40, x = x_range[2] + diff(x_range)/10, 
+                                        label = prof_level), 
+                size = 4)  + 
+      expand_limits(x = x_range[2] + diff(x_range)/5)
+    
+  } else if(direction == "vertical") { 
+    plot <- plot + geom_vline(data = plot_levels, aes(xintercept = score)) + 
+      geom_text(data = plot_levels, aes(x = score + 80, y = y_range[2] + diff(y_range)/10, 
+                                        label = prof_level, fill = NULL), 
+                size = 4)  + 
+      expand_limits(y = y_range[2] + diff(y_range)/5)
+  }
+  
+  return(plot)
+}
