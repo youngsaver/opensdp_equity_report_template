@@ -315,10 +315,11 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
       scale_y_continuous(name = "Standardized median difference", limits = c(limit1,limit2))+
       theme(axis.text=element_text(vjust=0.5, size=12),
             axis.title=element_text(size = 14))+
-      geom_text(aes(y = med.s.gaps+.02*sign(med.s.gaps), label=round(med.s.gaps,5)), 
+      geom_text(aes(y = med.s.gaps + .02*sign(med.s.gaps), label=round(med.s.gaps, 3)), 
                 size=4.5)+
-      ggtitle(paste("Top",n,"standardized difference of medians, 
-                    Calculation: (Median.1 - Median.2)/standard.deviation"))
+      labs(title = paste0("Top ", n, " standardized difference of medians"),
+           caption = expression("Calculation: " ~ frac(Delta ~ scriptstyle(medians), sigma))) + theme_bw()
+                
     
     print(barp)
     
@@ -356,10 +357,12 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
                color = "red", size=1)+
     geom_hline(yintercept=-0.1, linetype="solid", 
                color = "red", size=1)+
-    geom_text(aes(y = med.s.eff+.01*sign(med.s.eff), label=round(med.s.eff,5)), 
+    geom_text(aes(y = med.s.eff+.01*sign(med.s.eff), label=round(med.s.eff, 3)), 
               size=4.5)+
-    ggtitle(paste("Top",n,"effect sizes, 
-                  Calculation: d = mean difference/pooled sd; effect size = d/sqrt(d^2+4)"))
+    labs(title = paste0("Top ", n, " effect sizes"), 
+         caption = expression("Calculation: d = " ~ frac(bar(Delta), sigma[pooled]) ~ "\n" ~
+                  "Effect Size = " ~  frac(d, sqrt(d^2 + 4)))) + 
+           theme_bw()
   
   print(barp)
   
@@ -473,4 +476,47 @@ pkgTest <- function(x){
     }
   }
   
+}
+
+
+# Annotate a ggplot with proficiency levels
+
+# Plot = ggplot2 object
+# prof_levels = a formatted ggplot2 object
+# direction = character, horizontal or vertical, which direction should line be drawn
+add_ref_levels <- function(plot, prof_levels, direction = c("horizontal", "vertical"), 
+                           grade, subject) {
+  direction <- match.arg(direction)
+  plot_levels <- prof_levels[prof_levels$grade == grade, ]
+  plot_levels <- plot_levels[plot_levels$subject == subject, ]
+  
+  # Get range 1
+  if(!is.null(ggplot_build(plot)$layout$panel_scales_y[[1]]$range_c)){
+    y_range <- ggplot_build(plot)$layout$panel_scales_y[[1]]$range_c$range
+  } else {
+    y_range <- ggplot_build(plot)$layout$panel_scales_y[[1]]$range$range
+  }
+  # get range 2 
+  if(!is.null(ggplot_build(plot)$layout$panel_scales_x[[1]]$range_c)){
+    x_range <- ggplot_build(plot)$layout$panel_scales_x[[1]]$range_c$range
+  } else {
+    x_range <- ggplot_build(plot)$layout$panel_scales_x[[1]]$range$range
+  }
+  
+  if(direction == "horizontal"){
+    plot <- plot + geom_hline(data = plot_levels, aes(yintercept = score)) + 
+      geom_text(data = plot_levels, aes(y = score + 40, x = x_range[2] + diff(x_range)/10, 
+                                        label = prof_level), 
+                size = 4)  + 
+      expand_limits(x = x_range[2] + diff(x_range)/5)
+    
+  } else if(direction == "vertical") { 
+    plot <- plot + geom_vline(data = plot_levels, aes(xintercept = score)) + 
+      geom_text(data = plot_levels, aes(x = score + 80, y = y_range[2] + diff(y_range)/10, 
+                                        label = prof_level, fill = NULL), 
+                size = 4)  + 
+      expand_limits(y = y_range[2] + diff(y_range)/5)
+  }
+  
+  return(plot)
 }
