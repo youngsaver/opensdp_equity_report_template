@@ -19,6 +19,13 @@ output:
 *Programmed in R*
 
 ## Getting Started
+
+# TODO: Let's put some text here explaining what you'll need
+
+To complete this tutorial you'll need R, RStudio, and the following packages 
+installed on your machine: 
+
+
 ```{r knitrSetup, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, comment=NA}
 # Set options for knitr
 library(knitr)
@@ -1005,16 +1012,16 @@ simultaneously affect their education. It can be hard to determine, from an
 equity perspective, what factor most affects a student's ability to learn and
 achieve.
 
-For example, in the data, you may notice undocumented students generally score
+For example, in the data, you may notice migrant students generally score
 lower on reading tests. One could draw the conclusion from this trend that there
-exist direct barriers to achievement for undocumented students that the district
+exist direct barriers to achievement for migrant students that the district
 or state must tackle.
 
-However, many undocumented students may be Limited English Proficient (LEP)
+However, many migrant students may be Limited English Proficient (LEP)
 learners. In many cases, LEP students in general also have lower reading scores,
-due to language barriers. Can the correlation between immigration status and
+due to language barriers. Can the correlation between migrant status and
 lower scores be mostly explained by such language barriers? Or does the
-noticeable score effect from immigration status remain, even when we control for
+noticeable score effect from migrant status remain, even when we control for
 English proficiency level? Testing out this nuance, and others like it, can help
 a district hone its efforts and create better policy for low-scoring student
 populations.
