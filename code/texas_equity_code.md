@@ -19,17 +19,7 @@ output:
 *Programmed in R*
 
 ## Getting Started
-```{r knitrSetup, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, comment=NA}
-# Set options for knitr
-library(knitr)
-knitr::opts_chunk$set(comment=NA, warning=FALSE, echo=TRUE,
-                      root.dir = normalizePath("../"),
-                      error=FALSE, message=FALSE, fig.align='center',
-                      fig.width=6, fig.height=6, dpi = 144, 
-                      fig.path = "../figure/E_", 
-                      cache.path = "../cache/E_")
-options(width=80)
-```
+
 
 
 <div class="navbar navbar-default navbar-fixed-top" id="logo">
@@ -121,17 +111,18 @@ install first!), and the second chunk loads the dataset and provides us with
 variable labels. You can change the variable labels depending on the variables
 in your dataset.
 
-```{r packages, eacho=FALSE}
+
+```r
 #Packages
 library(tidyverse) # main suite of R packages to ease data analysis
 library(ggplot2) # to plot
 library(FSA) # functions for useful summary tables
 # Read in some R functions that are convenience wrappers
 source("../R/functions.R")
-
 ```
 
-```{r loaddataset, eacho=FALSE}
+
+```r
 # // Step 1: Read in csv file of our dataset, naming it "texas_data"
 texas_data <- read.csv("../data/synth_texas.csv")  
 
@@ -261,7 +252,8 @@ among all grades in the dataset: 3-8. The number of top gaps shown can be
 changed based on user inputs, as well as the gap categories and subject areas
 measured.
 
-```{r GapTest, echo=TRUE}
+
+```r
 #Use 'gap.test' function to explore most major gaps in student population
 gap.table <- gap.test(df = texas_data,
                     grade = "grade_level",
@@ -272,6 +264,8 @@ gap.table <- gap.test(df = texas_data,
                     cut = 120,
                     outlbl = "math score gap")
 ```
+
+<img src="../figure/E_GapTest-1.png" style="display: block; margin: auto;" />
 
 The `gap.test` output shows us that the top 3 gaps, in terms of effect size, are
 for 3rd, 4th, and 5th grade math scores between gender groups. The effect sizes
@@ -315,7 +309,8 @@ multipe gaps at once by setting the following variables to include multiple gaps
 from `gap.table`. This is shown in commented out code in the middle of the
 chunk.
 
-```{r SetGaps, echo=TRUE}
+
+```r
 # // Option 1: Choose to analyze just the largest gap
 gaps <- gap.table[1,]
 rownames(gaps) <- NULL
@@ -334,7 +329,6 @@ rownames(gaps) <- NULL
 
 # // Step 2: Set the number of gaps you'll be analyzing
 n.gaps <- 1
-
 ```
 
 **Analytic Technique:** Calculate the summary statistics for exam performance,
@@ -342,7 +336,8 @@ for all students at the grade level(s) in which gaps are measured. This will
 give us a few points of reference. Here, we look at the distribution of scores
 on the 3rd grade math test.
 
-```{r Averages, echo=TRUE}
+
+```r
 #Prints summary statistics for each gap's grade level
 #Loop over gap number in our table of gaps
 for(i in 1:n.gaps){
@@ -357,7 +352,12 @@ for(i in 1:n.gaps){
   print(a) #Print summary table
   
 }#End loop over gap number
+```
 
+```
+[1] "Grade level: 3 , Outcome: Math Score"
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   1071    1374    1479    1483    1598    1830 
 ```
 
 One particularly useful output in this summary is that we see the minimum and
@@ -369,7 +369,8 @@ distribution from summary statistics alone, so we will turn to visualization.
 developed sense of the distributions behind these summary statistics.
 Specifically, here we use box plots and histograms
 
-```{r VisualizeTotals, echo=TRUE}
+
+```r
 # // Visualizations: Box plots and Histograms
 #Loop over gap number in our table of gaps
 for(i in 1:n.gaps){
@@ -409,8 +410,9 @@ for(i in 1:n.gaps){
     
 
 }#End loop over gap number
-
 ```
+
+<img src="../figure/E_VisualizeTotals-1.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeTotals-2.png" style="display: block; margin: auto;" />
 
 We see left skew in the distribution of scores, as evidenced by the box plot and
 (more clearly) evidenced by the histogram. With skew present, it often makes
@@ -423,7 +425,8 @@ student demographic populations described in our gap. Now that we have some
 measures for the performance on exams among all of our students, we can create
 those same measures for male and female students. Then, we can compare them.
 
-```{r DescriptiveDemographics, echo=TRUE}
+
+```r
 # // Comparisons: Generating summary stats for demographics in gaps
 #Loop over gap number in our table of gaps
 for(i in 1:n.gaps){
@@ -447,7 +450,13 @@ for(i in 1:n.gaps){
       print(a) #Prints comparison table
   
 } #End loop over gap number
+```
 
+```
+[1] "Grade: 3 , Math Score"
+  Gender    n     mean       sd      min      Q1   median       Q3      max
+1      F 2394 1461.187 167.0296 1071.238 1354.22 1456.440 1577.068 1797.038
+2      M 2645 1503.434 166.4933 1104.596 1397.16 1500.294 1616.803 1830.397
 ```
 
 We can see that we have more male than female students in our data. In addition,
@@ -460,7 +469,8 @@ hypothesis directly by looking at shapes through visualization.
 and shape in these gaps. To do so, we will use both box plots broken down by
 gender and a stacked histogram broken down by gender.
 
-```{r VisualizeEcoDis, echo=TRUE}
+
+```r
 # // Step 1: Initialize a set of distinguishable colors for graphics
 colors <- c("red","dodgerblue3","green","coral","violet","burlywood2","grey68")
 
@@ -508,6 +518,8 @@ for(i in 1:n.gaps){
 } #End loop over gap number
 ```
 
+<img src="../figure/E_VisualizeEcoDis-1.png" style="display: block; margin: auto;" /><img src="../figure/E_VisualizeEcoDis-2.png" style="display: block; margin: auto;" />
+
 As we predicted, the distributions have similar shapes, with the male
 distribution shifted to higher scores than the female distribution. When broken
 down by gender group, the distributions maintain a left skew, which provides
@@ -541,7 +553,8 @@ its data by the following convention:
 
 We perform this through descriptive statistics and data visuals:
 
-```{r DescriptiveCombos, echo=TRUE}
+
+```r
 # // Analysis 1: Comparing within groups--Socioeconomic gaps within our chosen features
 #Set the feature you would like to compare within
 group.by <- "eco_dis"
@@ -561,9 +574,7 @@ for(i in 1:n.gaps){
   res <- levels(as.factor(data[,group.by])) #Different levels of 'group.by' to explore
 
   # print(paste("Grade:",grade,",",labels[subject])) #Print subject and grade level
-  # TODO: Break out the output here into multiple chunks with some text interleaved
-  # so that the tables and plots are explained separately 
-  # So chunk A = dataframes, B = histograms C = boxplots
+  
   # Facet by group by
   bp <- ggplot(data, aes(x=as.factor(data[,dem]), 
                                y=data[,subject])) + 
@@ -593,6 +604,8 @@ for(i in 1:n.gaps){
     print(h) #Print histogram
 }
 ```
+
+<img src="../figure/E_DescriptiveCombos-1.png" style="display: block; margin: auto;" />
 
 The box plots show that the distributions are shifted upwards for male students
 compared to female students across each socioeconomic marker. In addition, the
@@ -650,7 +663,8 @@ are not available, as a stand-in, you can calculate the standard deviation
 within the dataset you provide. There is commented out code within the chunk
 that you can activate to complete this task.
 
-```{r SchoolGaps, echo=TRUE}
+
+```r
 # // Measure and sort standardized median differences by school
 #Loop over gap number in our table of gaps
 for(i in 1:n.gaps){
@@ -714,17 +728,35 @@ for(i in 1:n.gaps){
                 scale_y_continuous(name = "Scaled Median Difference")+
                 ggtitle(paste("Grade",grade,labels[subject], 
                               "Median Differences", labels[dem],
-                              "(",lvl1,"-",lvl2,")")) + 
-    geom_hline(yintercept = 0, linetype = 2, color = "blue") + #ref line
-    theme_bw()
+                              "(",lvl1,"-",lvl2,")"))
   
     
   #Print barplot
   print(barp)
 
 } # End loop over gap number
+```
 
 ```
+[1] "Gender ,difference of medians:  F - M"
+[1] "Grade: 3 , Math Score"
+   school_code median_diff
+1            8  -0.6572479
+2           10  -0.4756636
+3            4  -0.4083432
+4            6  -0.3257568
+5            7  -0.3257568
+6           11  -0.3187182
+7           12  -0.3155889
+8            9  -0.3082086
+9     district  -0.2958738
+10           2  -0.2250585
+11           1  -0.1777400
+12           5  -0.1554653
+13           3  -0.1551231
+```
+
+<img src="../figure/E_SchoolGaps-1.png" style="display: block; margin: auto;" />
 
 A common reaction to the above graphic is to wonder if the schools with the
 greatest magnitude gaps--such as school number 8 in our data-- has discriminitory 
@@ -796,7 +828,8 @@ here because they are less susceptible to skew and outliers. We will visualize
 these medians with bar charts, and we will visualize the three lowest peforming
 schools with comparative box plots.
 
-```{r MedianTargets, echo=TRUE}
+
+```r
 # // Measure and sort medians by school
 #Loop over gap number in our table of gaps
 for(i in 1:n.gaps){
@@ -854,7 +887,7 @@ for(i in 1:n.gaps){
                               "Medians for", labels[dem],target,
                               ", by School"))
   barp <- add_ref_levels(plot = barp, prof_levels = prof_lev, direction = "horizontal", 
-                         grade = grade, subject = subject) + theme_bw()
+                         grade = grade, subject = subject)
   print(barp)
   
   #Isolate data for lowest 3 schools
@@ -876,13 +909,14 @@ for(i in 1:n.gaps){
                 ggtitle(paste("Lowest schools",labels[dem],
                               target,", Grade",grade,labels[subject]))
   boxp <- add_ref_levels(plot = boxp, prof_levels = prof_lev, direction = "horizontal", 
-                         grade = grade, subject = subject) + theme_bw()
+                         grade = grade, subject = subject)
   
   print(boxp)
 
 } # End loop over gap number
-
 ```
+
+<img src="../figure/E_MedianTargets-1.png" style="display: block; margin: auto;" /><img src="../figure/E_MedianTargets-2.png" style="display: block; margin: auto;" />
 
 Here we see that schools 8 and 4, which had among the three widest gaps, also
 had median math scores for female students that were among the lowest in the
@@ -916,7 +950,8 @@ the district-wide median.
 2) We will look at the number of target students at each campus who scored below
 the district-wide first quartile.
 
-```{r RawNumberTargets, echo=TRUE}
+
+```r
 ## // Find number of low-scoring students by school
 #Loop over gap number in our table of gaps
 for(i in 1:n.gaps){
@@ -979,7 +1014,7 @@ for(i in 1:n.gaps){
                 ggtitle(paste("Grade",grade,labels[subject], 
                               "Number of", labels[dem],target,
                               "Students",cut.labels[cut],
-                              "(by School)")) + theme_bw()
+                              "(by School)"))
   
     print(barp)
     
@@ -987,6 +1022,8 @@ for(i in 1:n.gaps){
   
 } # End loop over gap number
 ```
+
+<img src="../figure/E_RawNumberTargets-1.png" style="display: block; margin: auto;" /><img src="../figure/E_RawNumberTargets-2.png" style="display: block; margin: auto;" />
 
 From this visualization, we see that interventions would reach the greatest
 number of low-scoring students in our targeted population if implemented at
@@ -1051,10 +1088,8 @@ In the code block below, there is space to override these defaults if you would
 like to control for other factors in combinations other than the ones listed
 above.
 
-# TODO: Let's add a citation to the original source of this analysis, the SDP 
-# CG analysis guide
 
-```{r CoefficientAnalysis, echo=TRUE}
+```r
 # // Step 1: Initialize controls
 control.1 <- "eco_dis"
 control.2 <- "race_ethnicity" 
@@ -1199,16 +1234,18 @@ for(i in 1:n.gaps){
           guides(fill = guide_legend("", keywidth = 6, nrow = 2)) + 
           geom_text(aes(label = -estimate_lab, vjust = -0.3)) +
           scale_y_continuous(limit = c(lim1,lim2), name = "Scale Score Gap") + 
+          theme_classic() + theme(legend.position = "bottom", axis.text.x = element_blank(), 
+                                  axis.ticks.x = element_blank()) + 
           labs(title = paste("Differences in grade",grade,labels[subject],
                              "between",labels[dem],target,"and",ref.group), 
-               x = "") + theme_bw() +
-    theme(legend.position = "bottom", axis.text.x = element_blank(), 
-                                  axis.ticks.x = element_blank()) 
+               x = "")
   #Print
   print(b)
   
 }#End loop over gap number
 ```
+
+<img src="../figure/E_CoefficientAnalysis-1.png" style="display: block; margin: auto;" />
 
 The gender gap, as demonstrated by the regression coefficent values visualized
 as bars above, remains highly consistent, even after controlling for

@@ -270,9 +270,11 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
         scale_y_continuous(name = "Effect Size", limits = c(limit1,limit2))+
         theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5, size=8))+
         geom_hline(yintercept=0.1, linetype="solid", 
-                   color = "red", size=1)+
+                   color = "red", size=1) +
         geom_hline(yintercept=-0.1, linetype="solid", 
-                   color = "red", size=1)+
+                   color = "red", size=1) +
+        geom_hline(yintercept = 0, linetype = 2, color = "blue", 
+                   size = 1) + 
         ggtitle(feature)
       
       print(barp)
@@ -357,6 +359,8 @@ gap.test <- function(df, grade, outcome, features, n = 3, sds = NULL, comp = FAL
                color = "red", size=1)+
     geom_hline(yintercept=-0.1, linetype="solid", 
                color = "red", size=1)+
+    geom_hline(yintercept = 0, linetype = 2, color = "blue", 
+               size = 1) + 
     geom_text(aes(y = med.s.eff+.01*sign(med.s.eff), label=round(med.s.eff, 3)), 
               size=4.5)+
     labs(title = paste0("Top ", n, " effect sizes"), 
@@ -487,34 +491,46 @@ pkgTest <- function(x){
 add_ref_levels <- function(plot, prof_levels, direction = c("horizontal", "vertical"), 
                            grade, subject) {
   direction <- match.arg(direction)
+  # Get only the subjects and grades we need, drop the rest
   plot_levels <- prof_levels[prof_levels$grade == grade, ]
   plot_levels <- plot_levels[plot_levels$subject == subject, ]
   
-  # Get range 1
+  # Get range of the Y axis of the chart we are augmenting
   if(!is.null(ggplot_build(plot)$layout$panel_scales_y[[1]]$range_c)){
     y_range <- ggplot_build(plot)$layout$panel_scales_y[[1]]$range_c$range
   } else {
     y_range <- ggplot_build(plot)$layout$panel_scales_y[[1]]$range$range
   }
-  # get range 2 
+  # get range of the X axis of the chart we are augmenting
   if(!is.null(ggplot_build(plot)$layout$panel_scales_x[[1]]$range_c)){
     x_range <- ggplot_build(plot)$layout$panel_scales_x[[1]]$range_c$range
   } else {
     x_range <- ggplot_build(plot)$layout$panel_scales_x[[1]]$range$range
   }
+  # Set text size based on presence of faceting
+  if(!is.null(ggplot_build(plot)$layout$facet$params$facets)) {
+    text_size <- 1.5
+  } else {
+    text_size <- 4
+  }
   
+  # Decide on whether we are drawing horizontal or vertical reference lines
   if(direction == "horizontal"){
-    plot <- plot + geom_hline(data = plot_levels, aes(yintercept = score)) + 
-      geom_text(data = plot_levels, aes(y = score + 40, x = x_range[2] + diff(x_range)/10, 
+    plot <- plot + geom_hline(data = plot_levels, aes(yintercept = score), 
+                              linetype = 2) + 
+      geom_text(data = plot_levels, aes(y = score + 40, # put the label up high
+                                        # bump the label to the right of the line
+                                        x = x_range[2] + diff(x_range)/10, 
                                         label = prof_level), 
-                size = 4)  + 
-      expand_limits(x = x_range[2] + diff(x_range)/5)
+                size = text_size)  + # set the text size
+      expand_limits(x = x_range[2] + diff(x_range)/5) # make the plot big enough
     
   } else if(direction == "vertical") { 
-    plot <- plot + geom_vline(data = plot_levels, aes(xintercept = score)) + 
+    plot <- plot + geom_vline(data = plot_levels, aes(xintercept = score), 
+                              linetype = 2) + 
       geom_text(data = plot_levels, aes(x = score + 80, y = y_range[2] + diff(y_range)/10, 
                                         label = prof_level, fill = NULL), 
-                size = 4)  + 
+                size = text_size)  + 
       expand_limits(y = y_range[2] + diff(y_range)/5)
   }
   
