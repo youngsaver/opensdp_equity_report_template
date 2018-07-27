@@ -738,9 +738,10 @@ Since the summary tables already showed us that the medians
 between males and females tend to differ by about 40 for each group, and the 
 histograms showed us that the shape of the distributions also remains roughly 
 consistent across socioeconomic levels, we do not have reason to believe that 
-gender inequities are very different between socioeconomic levels. Since the gap
-persists at each socioeconomic level, our analysis should focus on the gender 
-gap overall, rather than for any one particular set of socioeconomic subgroups.
+gender inequities are very different between socioeconomic levels in our data. 
+Since the gap persists at each socioeconomic level, our analysis should focus on
+the gender gap overall, rather than the gender gap for any one particular set of
+socioeconomic subgroups.
 
 **Follow up question: How does this analysis look disaggregated by race/ethnicity?**
 
